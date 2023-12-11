@@ -1,0 +1,112 @@
+feature_extract_enable : 0
+pyr: 3
+init_num: 100
+linethre3d: 0.2
+linethre3d_proj: 5.0
+linethre2d: 5.0
+lamda: 0.05
+line_threshold: 30
+point_filter_num : 2
+max_iteration : 10
+dense_map_enable : 1
+cut_points_above_ground: false
+grid_pts_num: 1
+filter_size_surf : 0.15
+filter_size_map : 0.3
+filter_size: 0.2
+down_sample_manner: 1
+down_sample_num: 30
+cube_side_length : 10
+debug : 0
+img_scale : 1.0
+grid_size : 20
+patch_size : 4
+depth_search_radius: 30
+theta_thre: 0.9
+skip_depth: 1.0
+img_enable : 1
+lidar_enable : 1
+equalize: false
+trans_thre: 0.1
+rot_thre: 0.1309
+outlier_threshold : 1200 # 
+score_threshold: 1
+edgescore_threshold: 500.0
+ncc_en: false
+ncc_thre: 0.0
+window_size : 10
+pure_imu: false
+img_point_cov : 10000.0 # 1000
+line_cov : 10.0 # 1000
+projection_point_cov: 1000.0
+triangulate_point_cov: 10.0
+enable_projection: false
+enable_triangulate: false
+enable_line: false
+enable_BA: false
+laser_point_cov : 0.001 # 
+cam_fx: 4.616e+02
+cam_fy: 4.603e+02
+cam_cx: 3.630e+02
+cam_cy: 2.481e+02
+read_enable: true
+pub_pcl: true
+encoding: "mono8"
+map_dir: "/home/i/vio_in_lidar_map/src/vio_in_lidar_map/map/v201.pcd"
+path_file: "path_euroc6.txt"
+lines_file: "line_euroc6.txt"
+# first pose in ground truth
+# -1.053197 0.428061 1.332837 0.604566 0.026558 -0.795388 0.03395
+# -0.2675893, -0.0832979, -0.9599258, -1.053197;
+#   -0.0011978,  0.9962841, -0.0861190, 0.428061;
+#    0.9635323, -0.0218947, -0.2666947, 1.332837; 
+# 0,0,0,1
+
+# bias in 2D-3D by Yu Huai
+# 1.0000,    0.0017,   -0.0068,0.0067,
+# -0.0018,    1.0000,   -0.0048,-0.0199
+# 0.0068,    0.0048,    1.0000, -0.0224
+# 0,0,0,1
+
+## finally, calculate the origin_pose:
+#-0.274143 -0.081455 -0.958259 -1.054833   
+#-0.005341 0.996539 -0.083111 0.403659   
+#0.961707 -0.017679 -0.273636 1.305330   
+#0.000000 0.000000 0.000000 1.000000 
+origin_pose: [-1.054833,0.403659,1.305330,2.8466063,-1.2807462, 2.8529482]
+
+
+common:
+    lid_topic:  "/livox/lidar"
+    imu_topic:  "/imu0"
+
+preprocess:
+    lidar_type: 1 # Livox Avia LiDAR
+    scan_line: 6
+    blind: 5 # blind x m disable
+
+mapping:
+    normalized: false
+    acc_cov_scale: 100
+    gyr_cov_scale: 10000
+    acc_Q_scale: 10
+    gyr_Q_scale: 10
+    fov_degree:    90
+    extrinsic_T: [0,0,0]
+    extrinsic_R: [1,0,0,
+    0,1,0,
+    0,0,1]
+
+camera:
+    img_topic: /cam0/image_raw
+    #xiyuan
+    Rcl: [0.01486554,0.99955725,-0.0257744,
+         -0.99988093,0.01496721,0.00375619,
+          0.00414030,0.02571553,0.99966073]
+    Pcl: [0.06522291, -0.02070639, -0.00805460]
+    # Rcl: [0.0148655429818, -0.999880929698, 0.00414029679422,
+    #      0.999557249008, 0.0149672133247, 0.025715529948,
+    #       -0.0257744366974, 0.00375618835797, 0.999660727178]
+    # Pcl: [-0.0216401454975, -0.064676986768, 0.00981073058949]
+    blind: 0
+    

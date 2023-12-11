@@ -1,0 +1,88 @@
+/*
+ * @Author: asdleng lengjianghao2006@163.com
+ * @Date: 2023-02-23 22:45:53
+ * @LastEditors: asdleng lengjianghao2006@163.com
+ * @LastEditTime: 2023-03-04 17:18:06
+ * @FilePath: /vio_in_lidar_map/src/vio_in_lidar_map/include/feature.h
+ * @Description: 
+ * 
+ * Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
+ */
+// This file is part of SVO - Semi-direct Visual Odometry.
+//
+// Copyright (C) 2014 Christian Forster <forster at ifi dot uzh dot ch>
+// (Robotics and Perception Group, University of Zurich, Switzerland).
+//
+// SVO is free software: you can redistribute it and/or modify it under the
+// terms of the GNU General Public License as published by the Free Software
+// Foundation, either version 3 of the License, or any later version.
+//
+// SVO is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#ifndef SVO_FEATURE_H_
+#define SVO_FEATURE_H_
+
+#include <frame.h>
+#include <point.h>
+#include <common_lib.h>
+
+namespace lvo {
+
+// A salient image region that is tracked across frames.
+struct Feature
+{
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  enum FeatureType {
+    CORNER,
+    EDGELET
+  };
+  int id_;
+  FeatureType type;     //!< Type can be corner or edgelet.
+  Frame* frame;         //!< Pointer to frame in which the feature was detected.
+  cv::Mat img;
+  vector<cv::Mat> ImgPyr;
+  Vector2d px;          //!< Coordinates in pixels on pyramid level 0.
+  Vector3d f;           //!< Unit-bearing vector of the feature.
+  int level;            //!< Image pyramid level where feature was extracted.
+  PointPtr point;         //!< Pointer to 3D point which corresponds to the feature.
+  Vector2d grad;        //!< Dominant gradient direction for edglets, normalized.
+  float score;
+  float error;
+  // Vector2d grad_cur_;   //!< edgelete grad direction in cur frame 
+  Sophus::SE3 T_f_w_;
+  float* patch;
+  Feature(float* _patch, const Vector2d& _px, const Vector3d& _f, const Sophus::SE3& _T_f_w, const float &_score, int _level) :
+    type(CORNER),
+    px(_px),
+    f(_f),
+    T_f_w_(_T_f_w),
+    level(_level),
+    patch(_patch),
+    score(_score)
+  {}
+  Feature(Frame* _frame, const Vector2d& _px, int _level) :
+    type(CORNER),
+    frame(_frame),
+    px(_px),
+    f(frame->cam_->cam2world(px)),  // 这个cam2world具有迷惑性，实际上是像素坐标到一个莫为1的坐标（x/norm,y/norm,z/norm）
+    level(_level),
+    point(NULL),
+    grad(1.0,0.0)
+  {}
+  inline Vector3d pos() const { return T_f_w_.inverse().translation(); }
+  ~Feature()
+  {
+    // printf("The feature %d has been destructed.", id_);
+    delete[] patch;
+  }
+};
+
+} // namespace lvo
+
+#endif // SVO_FEATURE_H_

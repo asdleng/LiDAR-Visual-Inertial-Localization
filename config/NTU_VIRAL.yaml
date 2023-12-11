@@ -1,0 +1,68 @@
+feature_extract_enable : 0
+point_filter_num : 4
+max_iteration : 10
+dense_map_enable : 1
+cut_points_above_ground: false
+filter_size_surf : 0.15 # 0.3
+filter_size_map : 0.3 # 0.4
+filter_size: 0.2
+down_sample_manner: 1
+cube_side_length : 20 
+debug : 0
+img_scale : 1.0
+grid_size : 40
+patch_size : 8
+img_enable : 1
+lidar_enable : 1
+equalize: false
+outlier_threshold : 1200
+score_threshold: 50
+enable_triangulate: true
+triangulate_point_cov: 10.0
+ncc_en: false
+ncc_thre: 0.5
+window_size : 7
+img_point_cov : 10000.0
+line_cov : 10.0 # 1000
+enable_line: false
+enable_BA: false
+laser_point_cov : 0.001
+cam_fx: 4.250258563372763e+02
+cam_fy: 4.267976260903337e+02
+cam_cx: 3.860151866550880e+02
+cam_cy: 2.419130336743440e+02
+read_enable: true
+pub_pcl: true
+encoding: "mono8"
+map_dir: "/home/i/vio_in_lidar_map/src/vio_in_lidar_map/map/scans_ntu_3.pcd"
+path_file: "path_ntu_3.txt"
+lines_file: "line_ntu_3.txt"
+init_num: 100
+common:
+    lid_topic:  "/os1_cloud_node1/points"
+    imu_topic:  "/os1_cloud_node1/imu"
+
+preprocess:
+    lidar_type: 3  # Ouster
+    scan_line: 16
+    blind: 4 # blind x m disable
+
+mapping:
+    acc_cov_scale: 100 #10
+    gyr_cov_scale: 10000 #10
+    acc_Q_scale: 10
+    gyr_Q_scale: 10
+    fov_degree:    180
+    extrinsic_T: [ 0.0, 0.0, 0.0]
+    extrinsic_R: [ 1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1]
+
+camera:
+    img_topic: /left/image_raw 
+    # NTU_VIRAL
+    Rcl: [0.0218308, 0.99976, -0.00201407,
+         -0.0131205, 0.00230088, 0.999911,
+          0.999676, -0.0218025, 0.0131676]
+    Pcl: [0.122993,  0.0398643, -0.0577101]
+    blind: 2.5

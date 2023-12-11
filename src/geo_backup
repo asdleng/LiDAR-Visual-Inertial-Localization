@@ -1,0 +1,425 @@
+bool violm::CalculateJPandResP(){
+    debug_file<<"第"<<frame_nums<<"帧的第"<<iterate_num_P<<"次面特征迭代"<<std::endl;
+    Rwi = state->rot_end;                //debug_file<<"state->rot_end: "<<state->rot_end<<std::endl;
+    Pwi = state->pos_end;               //debug_file<<"state->pos_end: "<<state->pos_end.transpose()<<std::endl;
+    Rcw = Rci * Rwi.transpose();    //debug_file<<"state->vel_end: "<<state->vel_end.transpose()<<std::endl;
+    Pcw = -Rci*Rwi.transpose()*Pwi + Pci;   //debug_file<<"state->bias_a: "<<state->bias_a.transpose()<<std::endl;
+    Rwc = Rcw.transpose();
+    Pwc = -Rwc*Pcw;
+    laserCloudOri->clear();
+    corr_normvect->clear();
+    //memset(point_selected_surf, false, sizeof(point_selected_surf));
+    bool valid = true;
+    int ii=-1;
+    triangulate_pts_world->clear();
+    debug_file<<"共"<<triangulate_pts_body->size()<<"个三角化点"<<std::endl;
+    
+    for(auto it = triangulate_pts_body->begin();it!=triangulate_pts_body->end();it++){
+        ii++;
+        V3D p_body(it->x, it->y, it->z);
+        V3D p_world = Rwc*p_body+Pwc;
+        PointType p_world_;
+        p_world_.x = p_world.x();
+        p_world_.y = p_world.y();
+        p_world_.z = p_world.z();
+        
+        
+        PointVector points_near;
+        vector<float> pointSearchSqDis(NUM_MATCH_POINTS);
+        ikdtree.Nearest_Search(p_world_, NUM_MATCH_POINTS, points_near, pointSearchSqDis, 1);
+        /***Check if it is an effective point***/
+        point_selected_surf[ii] = points_near.size() < NUM_MATCH_POINTS ? false : pointSearchSqDis[NUM_MATCH_POINTS - 1] > 1.0 ? false
+                                                                                                                                : true;
+        if (!point_selected_surf[ii])
+            continue;
+        VD(4) pabcd;
+        pabcd.setZero();
+        
+        if (esti_plane(pabcd, points_near, 0.1)) //(planeValid)
+        {
+            float pd2 = pabcd(0) * p_world_.x + pabcd(1) * p_world_.y + pabcd(2) * p_world_.z +
+                        pabcd(3);
+            float s = 1 - 0.9 * fabs(pd2) / sqrt(p_body.norm());
+
+            if (s > 0.9) {
+                point_selected_surf[ii] = true;
+                normvec->points[ii].x = pabcd(0);
+                normvec->points[ii].y = pabcd(1);
+                normvec->points[ii].z = pabcd(2);
+                normvec->points[ii].intensity = pd2;
+                res_last[ii] = abs(pd2);
+            }
+        }
+        
+    }
+    
+    effct_feat_num = 0;
+    ii=-1;
+    for (auto it = triangulate_pts_body->begin();it!=triangulate_pts_body->end();it++)
+    {
+        ii++;
+        if (point_selected_surf[ii])
+        {   // 有效观测
+            V3D p_body(it->x, it->y, it->z);
+            V3D p_world = Rwc*p_body+Pwc;
+            PointType p_world_;
+            p_world_.x = p_world.x();
+            p_world_.y = p_world.y();
+            p_world_.z = p_world.z();
+            triangulate_pts_world->push_back(p_world_);
+            laserCloudOri->points[effct_feat_num] = triangulate_pts_body->points[ii];
+            corr_normvect->points[effct_feat_num] = normvec->points[ii];
+            effct_feat_num++;
+        }
+    }
+    debug_file<<"有效点个数为："<<effct_feat_num<<std::endl;
+    if (effct_feat_num < 1)
+    {
+        valid = false;
+        return valid;
+    }
+
+    /*** Computation of Measuremnt Jacobian matrix H and measurents vector ***/
+    JP_sub = MatrixXd::Zero(effct_feat_num, 24); //23
+    resP_sub = MatrixXd::Zero(effct_feat_num, 1);
+
+    for (int i = 0; i < effct_feat_num; i++)
+    {
+        const PointType &laser_p = laserCloudOri->points[i];
+        V3D point_this_be(laser_p.x, laser_p.y, laser_p.z);
+        M3D point_be_crossmat;
+        point_be_crossmat << SKEW_SYM_MATRX(point_this_be);
+        V3D point_this = Rci * point_this_be + Pci;
+        M3D point_crossmat;
+        point_crossmat << SKEW_SYM_MATRX(point_this);
+
+        /*** get the normal vector of closest surface/corner ***/
+        const PointType &norm_p = corr_normvect->points[i];
+        V3D norm_vec(norm_p.x, norm_p.y, norm_p.z);
+
+        /*** calculate the Measuremnt Jacobian matrix H ***/
+        V3D C(state->rot_end.conjugate() * norm_vec);
+        V3D A(point_crossmat * C);
+        // if (extrinsic_est_en)
+        // {
+        //     V3D B(point_be_crossmat * s.offset_R_L_I.conjugate() * C); //s.rot.conjugate()*norm_vec);
+        //     ekfom_data.h_x.block<1, 12>(i, 0) << norm_p.x, norm_p.y, norm_p.z, VEC_FROM_ARRAY(A), VEC_FROM_ARRAY(B), VEC_FROM_ARRAY(C);
+        // }
+        // else
+        // {
+        JP_sub.block<1, 6>(i, 0) << norm_p.x, norm_p.y, norm_p.z, VEC_FROM_ARRAY(A);
+        // }   // h_x: 残差的雅可比
+
+        /*** Measuremnt: distance to the closest surface/corner ***/
+        resP_sub(i) = -norm_p.intensity;    // h: 残差
+    }
+    //debug_file<<"JP_sub："<<JP_sub<<std::endl;
+    //debug_file<<"resP_sub："<<resP_sub.transpose()<<std::endl;
+    return valid;
+}
+bool violm::checkParallax(const vector<cv::Point2f> &pts1, const vector<int> &failed_index, const vector<cv::Point2f> &pts2){
+    if(pts1.size()!=failed_index.size()){
+        debug_file<<"checkParallax报错："<<pts1.size()<<","<<failed_index.size()<<std::endl;
+        ROS_WARN("checkParallax ERROR");
+        return false;
+    }
+    double sum = 0;
+    int k = -1;
+    for(int i=0;i<pts1.size();i++){
+        if(failed_index[i]==1){
+            continue;
+        }
+        else{
+            k++;
+            auto dx = pts1[i].x-pts2[k].x;
+            auto dy = pts1[i].y-pts2[k].y;
+            sum += sqrt(dx*dx+dy*dy);
+        }
+    }
+    debug_file<<"视差均值为"<<sum/pts2.size()<<std::endl;
+    return sum/pts2.size()>20 ? true: false;
+};
+bool violm::featAdd(){
+    img_last = new_frame->img();
+    for(int i=0;i<length;i++){
+        if(grid.cells[i]->size()==0) continue;
+            auto px = grid.cells[i]->begin()->px;
+            if(grid.cells[i]->begin()->score>score_threshold){
+                cv::Point2f pp(px[0],px[1]);
+                pts_last.push_back(pp);
+                failed_index.push_back(0);
+                if(parallax_status){
+                    tracked_points.push_back(pp);
+                }
+            }
+    }
+    tracked_R = new_frame->T_f_w_.rotation_matrix().transpose();
+    tracked_t = new_frame->pos();
+    if(pts_last.size()==0) return false;
+    return true;
+}
+void violm::reduceVector(vector<cv::Point2f> &v, vector<uchar> status){
+    int j = 0;
+    for (int i = 0; i < int(v.size()); i++)
+        if (status[i])
+            v[j++] = v[i];
+    v.resize(j);
+}
+
+void violm::geoConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
+    vector<uchar> status;
+    vector<float> err;
+    int tracked_points_ind = 0;
+    // 遍历grid
+
+    //debug_file<<"目前有"<<pts_last.size()<<"个点被跟踪"<<std::endl;
+
+    // 如果是第一帧，压入last
+    if(first_frame){
+        featAdd();
+    }
+    else{
+        img_cur = new_frame->img();
+        cv::calcOpticalFlowPyrLK(img_last,img_cur,pts_last,pts_cur,status,err,cv::Size(21, 21), 3);
+        reduceVector(pts_last,status);
+        reduceVector(pts_cur,status);
+        // 对之前的帧，记录跟丢的点，放到failed_index里面
+        int i,j=0;
+        while(i<failed_index.size()&&j<status.size()){
+            if(failed_index.at(i)==1){
+                i++;
+            }
+            else if(!status.at(j)){
+                failed_index.at(i)=1;
+                //debug_file<<"按上一关键帧的索引，第"<<i<<"个点被丢失跟踪"<<std::endl;
+                i++;
+                j++;
+            }
+            else{
+                i++;
+                j++;
+            }
+        }
+        img_last = img_cur;
+        pts_last = pts_cur;
+        // 检查视差是否满足条件，满足就进行三角化然后优化位姿
+        parallax_status  = checkParallax(tracked_points,failed_index, pts_cur);
+        if(parallax_status){
+            triangulate();
+            failed_index.clear();
+            tracked_points.clear();
+            pts_cur.clear();
+            pts_last.clear();
+        }
+        else{
+            return;
+        }
+
+
+        // 视差满足条件，开始迭代
+        normvec->resize(triangulate_pts_body->size());
+        StatesGroup * state_before = new StatesGroup(*state);
+        iterate_num_P = 0;
+        double last_error=100000;
+
+        for(int i=0;i<max_iteration;i++){
+            auto old_state = *state;
+            auto valid = CalculateJPandResP();
+            if(!valid){
+                debug_file<<"无点面匹配"<<std::endl;
+                continue;
+            }
+            //debug_file<<"JP_sub: "<<JP_sub<<std::endl;
+            //debug_file<<"resP_sub: "<<resP_sub.transpose()<<std::endl;
+            const int eff_num = resP_sub.size();
+            Eigen::MatrixXd HP_sub = MatrixXd::Zero(eff_num, DIM_STATE);
+            for(int l=0;l<6;l++){
+                HP_sub.col(l) = JP_sub.col(l);
+            }
+            
+            //debug_file<<"H_sub: "<<H_sub<<std::endl; 
+            auto HP_sub_T = HP_sub.transpose();    
+            HP_T_HP = HP_sub_T * HP_sub;
+            
+            
+            // debug_file<<"IMG_COV: "<<IMG_COV<<std::endl;
+            MD(DIM_STATE, DIM_STATE) &&KP_1 = (HP_T_HP + (state->cov / POINT_COV).inverse()).inverse();
+            //debug_file<<"H_T_H: "<<H_T_H<<std::endl;
+            //debug_file<<"state->cov: "<<state->cov<<std::endl;
+            // debug_file<<"K_1: "<<K_1<<std::endl;
+            auto &&HPTz = HP_sub_T * resP_sub;
+            // K = K_1.block<DIM_STATE,6>(0,0) * H_sub_T;
+            auto vecP = (*state_before) - (*state);
+            GP = KP_1 * HP_T_HP;
+            auto solutionP = - KP_1 * HPTz + vecP - GP* vecP;
+            (*state) += solutionP;
+            auto &&rotP_add = solutionP.block<3,1>(3,0);
+            auto &&tP_add   = solutionP.block<3,1>(0,0);
+            
+			int k = 0;
+            double meansP = 0;
+			for(int j=0;j<resP_sub.rows();j++){
+				k++;
+				meansP+=fabs(resP_sub(j));
+			}
+			meansP = meansP/k;
+			debug_file<<"第"<<iterate_num_P<<"次面约束迭代的平均error为："<<meansP<<std::endl;
+            
+            if(meansP>last_error){
+                debug_file<<"损失增大，回退"<<std::endl;
+                *state = old_state; 
+                GP = lastGP;
+            }
+            else 
+            if(state->pos_end.hasNaN()==true){
+                *state = old_state;
+            }
+            else{
+            // 成功了
+                last_error = meansP; 
+                lastGP = GP;
+            }   
+            if ((rotP_add.norm() * 57.3f < 0.001f) && (tP_add.norm() * 100.0f < 0.001f))
+            {
+                debug_file<<"迭代"<<iterate_num_P<<"次收敛"<<std::endl;
+                break;
+            }
+            iterate_num_P++;
+        }
+        state->cov -= GP*state->cov;
+        updateFrameState();
+        setKF(kf);
+        Updatekf(kf);
+        UpdateCamPose();
+
+        // 优化完成，重新提取特征点
+        featAdd();
+
+    }
+
+}
+void violm::triangulate(){
+    triangulate_pts_body->clear();
+    int index = -1;
+    int eff_ind = -1;
+    // debug_file<<"上一关键帧提取点的个数"<<tracked_points.size()<<std::endl;
+    // debug_file<<"当前关键帧跟踪点个数"<<pts_cur.size()<<std::endl;
+    for(auto it = tracked_points.begin();it!=tracked_points.end();it++){
+        index++;
+        if(failed_index.at(index) == 1) continue;
+            eff_ind++;
+            auto dx = pts_cur.at(eff_ind).x - it->x;
+            auto dy = pts_cur.at(eff_ind).y - it->y;
+            if(sqrt(dx*dx+dy*dy)<20){
+                continue;   // 视差太小
+            }
+            Eigen::MatrixXd svd_A(2*2 , 4);
+            int f_num = 0;
+            int svd_idx = 0;
+            M3D R0; V3D t0;
+            M3D R1; V3D t1;
+            
+            R0 = new_frame->T_f_w_.rotation_matrix().transpose();
+            t0 = new_frame->pos();
+            Eigen::Matrix<double, 3, 4> P0;
+            P0.leftCols<3>() = Eigen::Matrix3d::Identity();
+            P0.rightCols<1>() = Eigen::Vector3d::Zero();
+            V3D f0 = new_frame->c2f(V2D{pts_cur.at(eff_ind).x,pts_cur.at(eff_ind).y});
+            f0 = f0.normalized();
+            svd_A.row(svd_idx++) = f0[0] * P0.row(2) - f0[2] * P0.row(0);
+            svd_A.row(svd_idx++) = f0[1] * P0.row(2) - f0[2] * P0.row(1);
+            
+            R1 = tracked_R;
+            t1 = tracked_t;
+            V3D t = R0.transpose() * (t1 - t0);
+            M3D R = R0.transpose() * R1;
+            Eigen::Matrix<double, 3, 4> P;
+            P.leftCols<3>() = R.transpose();
+            P.rightCols<1>() = -R.transpose() * t;
+            //debug_file<<"上一帧特征点索引"<<index<<std::endl;
+            //debug_file<<"当前帧特征点索引"<<eff_ind<<std::endl;
+            V3D f1 = cam->cam2world(V2D{it->x,it->y});
+            f1 = f1.normalized();
+            svd_A.row(svd_idx++) = f1[0] * P.row(2) - f1[2] * P.row(0);
+            svd_A.row(svd_idx++) = f1[1] * P.row(2) - f1[2] * P.row(1);
+
+            ROS_ASSERT(svd_idx == svd_A.rows());
+            Eigen::Vector4d svd_V = Eigen::JacobiSVD<Eigen::MatrixXd>(svd_A, Eigen::ComputeThinV).matrixV().rightCols<1>();
+            PointType p,pf_;
+            V3D pf;
+            pf[0] = svd_V[0]/ svd_V[3];
+            pf[1] = svd_V[1]/ svd_V[3];
+            pf[2] = svd_V[2]/ svd_V[3];
+            pf_.x = pf.x();
+            pf_.y = pf.y();
+            pf_.z = pf.z();
+            pf_.curvature = frame_nums; // 使用curvature存储帧id
+            triangulate_pts_body->push_back(pf_);
+            // V3D pt = new_frame->f2w(pf);
+            // p.x = pt.x();
+            // p.y = pt.y();
+            // p.z = pt.z();
+            // //debug_file<<"第"<<index<<"号点的三角化坐标为: "<<p.x<<","<<p.y<<","<<p.z<<std::endl;
+            // triangulate_pts_world->push_back(p);
+            
+    }
+}
+
+void violm::photometricBA(){
+    if(covisible_pair.size()==0) return;
+    ceres::Problem photometricBAproblem;
+    ceres::LossFunction* loss_function = new ceres::CauchyLoss(1.0);
+
+    // 添加参数块，并给定初值
+    int i=0;
+    for(auto it=map.keyframes_.begin();it!=map.keyframes_.end();it++){
+        ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
+        para_pose[i][0] = it->get()->T_f_w_.translation().x();
+        para_pose[i][1] = it->get()->T_f_w_.translation().y();
+        para_pose[i][2] = it->get()->T_f_w_.translation().z();
+        Quaterniond q{it->get()->T_f_w_.rotation_matrix()};
+        para_pose[i][3] = q.x();
+        para_pose[i][4] = q.y();
+        para_pose[i][5] = q.z();
+        para_pose[i][6] = q.w();
+        photometricBAproblem.AddParameterBlock(para_pose[i], 7, local_parameterization);
+        i++;
+    }
+    
+    // 添加残差块
+    debug_file<<"共视点个数："<<covisible_pair.size()<<std::endl;
+    for(auto it = covisible_pair.begin();it!=covisible_pair.end();it++){
+        int index1,index2;
+        //debug_file<<"在关键帧中找第"<<std::get<1>(*it)<<"帧和第"<<std::get<2>(*it)<<"帧"<<std::endl;
+        auto frame1_ptr = map.findFrame(std::get<1>(*it),index1);
+        auto frame2_ptr = map.findFrame(std::get<2>(*it),index2);
+        //debug_file<<"他们位于窗口的第"<<index1<<","<<index2<<std::endl;
+        if(frame1_ptr==nullptr||frame2_ptr==nullptr){
+            debug_file<<"出问题了,滑动窗口内没找到关键帧"<<std::endl;
+            continue;
+        }
+        cv::Mat* img_ptr1 = &(frame1_ptr->img_pyr_[0]);
+        cv::Mat* img_ptr2 = &(frame2_ptr->img_pyr_[0]);
+        photometricBAproblem.AddResidualBlock(
+        new Photometric_Error(cam,img_ptr1,img_ptr2,std::get<0>(*it)->pos_),
+        loss_function,
+        para_pose[index1],para_pose[index2]);
+    }
+    debug_file<<"残差块添加完成"<<std::endl;
+    ceres::Solver::Summary summary;
+    ceres::Solver::Options options;
+    options.minimizer_progress_to_stdout = true;
+    ceres::Solve(options, &photometricBAproblem, &summary);
+    debug_file<<"Ceres优化成功"<<std::endl;
+    i=0;
+    for(auto it=map.keyframes_.begin();it!=map.keyframes_.end();it++){
+        V3D p_i;
+        M3D R_i;
+        Eigen::Quaternion<double> q_i{para_pose[i][6], para_pose[i][3], para_pose[i][4], para_pose[i][5]};
+        R_i = q_i.toRotationMatrix();  
+        p_i<<para_pose[i][0],para_pose[i][1],para_pose[i][2];
+        it->get()->T_f_w_ = Sophus::SE3(R_i, p_i);
+        i++;
+        
+    }
+}

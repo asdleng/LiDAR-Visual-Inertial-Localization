@@ -1,0 +1,111 @@
+feature_extract_enable : 0
+pyr: 1
+init_num: 100
+linethre3d: 0.2
+linethre3d_proj: 5.0
+linethre2d: 5.0
+lamda: 0.05
+line_threshold: 30
+point_filter_num : 2
+max_iteration : 10
+dense_map_enable : 1
+cut_points_above_ground: false
+grid_pts_num: 1
+filter_size_surf : 0.15
+filter_size_map : 0.3
+filter_size: 0.2
+down_sample_manner: 1
+down_sample_num: 30
+cube_side_length : 20
+debug : 0
+img_scale : 1.0
+grid_size : 20
+patch_size : 8
+depth_search_radius: 60
+theta_thre: 0.9
+skip_depth: 1.8
+img_enable : 1
+lidar_enable : 1
+equalize: true
+trans_thre: 0.1
+rot_thre: 0.1309
+outlier_threshold: 3000 # 
+score_threshold: 1
+edgescore_threshold: 500.0
+ncc_en: true
+ncc_thre: 0.0
+window_size : 10
+img_point_cov : 10000.0 # 1000
+line_cov : 100.0 # 1000
+projection_point_cov: 10000.0
+triangulate_point_cov: 10.0
+enable_projection: true
+enable_triangulate: true
+enable_line: false
+enable_BA: false
+laser_point_cov : 0.001 # 
+cam_fx: 4.616e+02
+cam_fy: 4.603e+02
+cam_cx: 3.630e+02
+cam_cy: 2.481e+02
+read_enable: true
+pub_pcl: true
+encoding: "mono8"
+map_dir: "/home/i/vio_in_lidar_map/src/vio_in_lidar_map/map/v101_add.pcd"
+path_file: "path_euroc2.txt"
+lines_file: "line_euroc2.txt"
+# first pose in ground truth
+#  0.3006385, -0.5041507,  0.8095977,0.515356
+#-0.1448253, -0.8631560, -0.4837225,1.996773
+#0.9426782,  0.0281753, -0.3325117,0.971104
+# 0 0 0 1
+
+# bias in 2D-3D by Yu Huai
+# 0.9994,-0.0344,-0.0073,0.1118,
+# 0.0344,0.9994,0.0023,-0.0142,
+# 0.0072,-0.0026,1.0000,-0.0401,
+# 0,0,0,1
+
+## finally, calculate the origin_pose:
+# 0.2986  -0.4744 0.8282    0.5511   
+# -0.1322    -0.8799    -0.4563    2.0013   
+# 0.9452    0.0268    -0.3254    0.9295   
+# 0.0000    0.0000    0.0000    1.0000
+
+origin_pose: [0.5111,2.0013,0.9295,2.1902223,0.9758242,1.009101]
+
+
+common:
+    lid_topic:  "/livox/lidar"
+    imu_topic:  "/imu0"
+
+preprocess:
+    lidar_type: 1 # Livox Avia LiDAR
+    scan_line: 6
+    blind: 5 # blind x m disable
+
+mapping:
+    normalized: false
+    acc_cov_scale: 100
+    gyr_cov_scale: 10000
+    acc_Q_scale: 10
+    gyr_Q_scale: 10
+    fov_degree:    90
+    extrinsic_T: [0,0,0]
+    extrinsic_R: [1,0,0,
+    0,1,0,
+    0,0,1]
+
+camera:
+    img_topic: /cam0/image_raw
+    #xiyuan
+    Rcl: [0.01486554,0.99955725,-0.0257744,
+         -0.99988093,0.01496721,0.00375619,
+          0.00414030,0.02571553,0.99966073]
+    Pcl: [0.06522291, -0.02070639, -0.00805460]
+    # Rcl: [0.0148655429818, -0.999880929698, 0.00414029679422,
+    #      0.999557249008, 0.0149672133247, 0.025715529948,
+    #       -0.0257744366974, 0.00375618835797, 0.999660727178]
+    # Pcl: [-0.0216401454975, -0.064676986768, 0.00981073058949]
+    blind: 0
+    

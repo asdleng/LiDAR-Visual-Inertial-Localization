@@ -1,0 +1,82 @@
+feature_extract_enable : 0
+pyr: 3
+init_num: 100
+linethre3d: 10.0
+linethre3d_proj: 10.0
+linethre2d: 10.0
+lamda: 0.05
+line_threshold: 30
+point_filter_num : 2
+max_iteration : 10
+dense_map_enable : 1
+cut_points_above_ground: false
+grid_pts_num: 1
+filter_size_surf : 0.15
+filter_size_map : 0.3
+filter_size: 0.2
+down_sample_manner: 1
+down_sample_num: 30
+cube_side_length : 20
+debug : 0
+img_scale : 1.0
+grid_size : 20
+patch_size : 8
+depth_search_radius: 20
+img_enable : 1
+lidar_enable : 1
+equalize: true
+trans_thre: 0.1
+rot_thre: 0.1309
+outlier_threshold : 600 # 
+score_threshold: 5
+ncc_en: false
+ncc_thre: 0.5
+window_size : 10
+img_point_cov : 10000.0 # 1000
+line_cov : 10.0 # 1000
+triangulate_point_cov: 10.0
+enable_triangulate: false
+enable_line: false
+enable_BA: false
+laser_point_cov : 0.001 # 0.001
+cam_fx: 400.0
+cam_fy: 400.0
+cam_cx: 400.0
+cam_cy: 300.0
+read_enable: true
+pub_pcl: true
+pure_imu: false
+map_dir: "/home/i/CARLA_0.9.13/HDMaps/Town03.pcd"
+origin_pose: [16.5, 134.2,2.01,0,0,0]
+left_coord: true
+common:
+    lid_topic:  "/livox/lidar"
+    imu_topic:  "/carla/ego_vehicle/imu/imu1"
+
+preprocess:
+    lidar_type: 1 # Livox Avia LiDAR
+    scan_line: 6
+    blind: 5 # blind x m disable
+
+mapping:
+    normalized: false
+    acc_cov_scale: 10
+    gyr_cov_scale: 100
+    acc_Q_scale: 1
+    gyr_Q_scale: 1
+    fov_degree:    90
+    extrinsic_T: [ 0,0,0 ]
+    extrinsic_R: [ 1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1]
+
+camera:
+    # img_topic: /usb_cam/image_raw
+    # img_topic:  /camera/image_color
+    img_topic: /left_camera/image
+    #xiyuan
+    Rcl: [0,-1,0,
+    0,0,-1,
+    1,0,0]
+    Pcl: [0,0,0]
+    
