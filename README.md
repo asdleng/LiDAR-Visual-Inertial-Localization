@@ -4,7 +4,7 @@ VIOLM is a Visual-Inertial Odometry (VIO) system designed to running in a LiDAR-
 - The direct method and feature-based method are jointly utilized for system accuracy and robustness.
 - A 2D-3D line corresponding module and a 3D point alignment module are designed to further improve the pose estimation.
 
-![Image text](https://github.com/asdleng/VIOLM/blob/main/img/v1_01.png =100x200)
+![Image text](https://github.com/asdleng/VIOLM/blob/main/img/v1_01.png)
 
 ## Prerequisites
 - ROS
