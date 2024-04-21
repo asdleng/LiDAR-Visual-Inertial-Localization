@@ -38,8 +38,8 @@ void violm::Init(PointCloudXYZI::Ptr ptr){
     state = new StatesGroup;
     state_propagat = new StatesGroup;
     debug_file.open(FILE_DIR("debug_J.txt"), ios::out);
-    exp_file_i.open("/home/i/vio_in_lidar_map/src/vio_in_lidar_map/Log/exp.txt",ios::in);
-    res_file_i.open("/home/i/vio_in_lidar_map/src/vio_in_lidar_map/Log/response.txt",ios::in);
+    exp_file_i.open("/home/weilin/vio_in_lidar_map/src/vio_in_lidar_map/Log/exp.txt",ios::in);
+    res_file_i.open("/home/weilin/vio_in_lidar_map/src/vio_in_lidar_map/Log/response.txt",ios::in);
     loadExposureTime();
     if(read_enable) lines_file_i.open(FILE_DIR(lines_file),ios::in);
     else lines_file_w.open(FILE_DIR(lines_file),ios::out);
@@ -162,15 +162,18 @@ void violm::Init(PointCloudXYZI::Ptr ptr){
         int k = 200;
         std::cout<<"计算3D直线中"<<std::endl;
         PointCloud<double> pointData; 
+        std::vector<PLANE> planes;
+        std::vector<double> ts;
         for(int i=0;i<ptr->size();i++){
             V3D pos(ptr->at(i).x,ptr->at(i).y,ptr->at(i).z);
             pointData.pts.push_back(PointCloud<double>::PtData(pos.x(),pos.y(),pos.z()));
         }   // 放到pointData里
         
-        detector.run(pointData, k, planes, lines, ts);
+        detector->run(pointData, k, planes, lines, ts);
         std::cout<<"lines number: "<<lines.size()<<std::endl;
         std::cout<<"planes number: "<<planes.size()<<std::endl;
         std::cout<<"计算完成"<<std::endl;
+        
         auto it = lines.begin();
         while(it!=lines.end()){
             auto delta = it->at(0)-it->at(1);
@@ -184,6 +187,7 @@ void violm::Init(PointCloudXYZI::Ptr ptr){
             lines[i][1].x<<" "<<lines[i][1].y<<" "<<lines[i][1].z<<std::endl; 
         }
     }
+    detector.reset();
 }
 void violm::reset_grid()
 {
@@ -403,7 +407,6 @@ void violm::projection(){
                 //std::cout<<"该grid已经有"<<j<<"个候选点"<<std::endl;
                 grid.cells[index]->push_back(c);    // 把点放到cell里面    
                 pts_num_in_each_cell[index]++;      
-                
             }
         }
     }
@@ -422,11 +425,10 @@ void violm::projection(){
                 V3D pt_cam(new_frame->w2f(it->pt->pos_));  // 相机坐标系坐标
                 if(pt_cam[2]<skip_depth) continue; // 不要太近的点
                 bool depth_continous = depthContinue2(it->px,pt_cam[2],it->pt->pos_);
-                
                 //cv::circle(img_cp,gird_point,4,cv::Scalar(255, 0, 0), -1, 8);
-                if(depth_continous) continue;
+                if(depth_continous) continue;debug_file<<"7"<<std::endl;
                 point_list_ptr->push_back(*it);
-                cv::Point gird_point(it->px[0],it->px[1]);
+                cv::Point gird_point(it->px[0],it->px[1]);debug_file<<"7"<<std::endl;
                 cv::circle(img_cp,gird_point,4,cv::Scalar(255, 0, 0), -1, 8);   // 合格点 蓝色
                 PointType p;
                 p.x = it->pt->pos_.x();
@@ -486,30 +488,30 @@ void violm::addObservation(){
                 
                 // 如果是关键帧，那么就添加这个点关联的帧
 
-                    auto t3 = omp_get_wtime();
-                    bool add_flag = true;
-                    if(it->get()->is_outlier==true){
-                        add_flag = false;
-                        it->get()->is_outlier = false;   // 修改外点观测
-                    } 
-                    // if(add_flag == true){   // 不是外点，判断一下是否深度连续
-                    //     bool depth_continous = depthContinues(px,pf[2]);
-                    // }
-                    if(need_keyframe&&add_flag){
-                        it_ptr->value = score;
-                        Vector3d f = cam->cam2world(px);
-                        float* patch_temp = new float[patch_size_total*pyr];
-                        for(int l = 0;l<pyr;l++){
-                            getpatch(img, px, patch_temp, l); // 添加patch 0在前，2在后
-                        }
-                        FeaturePtr ftr_new(new Feature(patch_temp, px, f, new_frame->T_f_w_, it_ptr->value, 0)); 
-                        ftr_new->frame = map.lastKeyframe().get();
-                        ftr_new->frame->id_ = new_frame->id_;
-                        it_ptr->addFrameRef(ftr_new);    // 给地图点加特征，关键帧
-                        //debug_file<<"给点添加关键帧"<<ftr_new->frame->id_<<std::endl;
+                auto t3 = omp_get_wtime();
+                bool add_flag = true;
+                if(it->get()->is_outlier==true){
+                    add_flag = false;
+                    it->get()->is_outlier = false;   // 修改外点观测
+                } 
+                // if(add_flag == true){   // 不是外点，判断一下是否深度连续
+                //     bool depth_continous = depthContinues(px,pf[2]);
+                // }
+                if(need_keyframe&&add_flag){
+                    it_ptr->value = score;
+                    Vector3d f = cam->cam2world(px);
+                    float* patch_temp = new float[patch_size_total*pyr];
+                    for(int l = 0;l<pyr;l++){
+                        getpatch(img, px, patch_temp, l); // 添加patch 0在前，2在后
                     }
-                    auto t4 = omp_get_wtime();
-                    t_add = t_add+t4-t3;
+                    FeaturePtr ftr_new(new Feature(patch_temp, px, f, new_frame->T_f_w_, it_ptr->value, 0)); 
+                    ftr_new->frame = map.lastKeyframe().get();
+                    ftr_new->frame->id_ = new_frame->id_;
+                    it_ptr->addFrameRef(ftr_new);    // 给地图点加特征，关键帧
+                    //debug_file<<"给点添加关键帧"<<ftr_new->frame->id_<<std::endl;
+                }
+                auto t4 = omp_get_wtime();
+                t_add = t_add+t4-t3;
             }
         }
     }
@@ -1700,26 +1702,27 @@ bool violm::depthContinue(const V2D &px,const double & depth0){
 }
 bool violm::depthContinue2(const V2D &px,const double & depth0, const V3D &ptw){
     bool depth_continous = false;
-    
+
     for (int u=-depth_search_radius; u<=depth_search_radius; u++){
-                    for (int v=-depth_search_radius; v<=depth_search_radius; v++){
-                        if(u==0 && v==0) continue;
-                        float depth = depth_img[width*(v+int(px[1]))+u+int(px[0])];
-                        if(depth == 0.) continue;
-                        double delta = depth - depth0;
-                        if(delta>0) continue;
-                        V3D v1 = adj_pts[width*(v+int(px[1]))+u+int(px[0])] - ptw;
-                        V3D v2 =  new_frame->pos() - ptw;
-                        double theta = v1.dot(v2)/v1.norm()/v2.norm();
-                        
-                        //debug_file<<"theta:"<<theta<<std::endl;
-                        if(theta>theta_thre){
-                            depth_continous = true;
-                            break;
-                        }
-                    }
-                    if(depth_continous) break;
-                }
+        for (int v=-depth_search_radius; v<=depth_search_radius; v++){
+            if(u==0 && v==0) continue;
+            float depth = depth_img[width*(v+int(px[1]))+u+int(px[0])];
+            if(depth == 0.) continue;
+            double delta = depth - depth0;
+            if(delta>0) continue;
+            int adjusted_v = std::max(0, std::min(height - 1, v + int(px[1])));
+            int adjusted_u = std::max(0, std::min(width - 1, u + int(px[0])));
+            V3D v1 = adj_pts[width*adjusted_v+adjusted_u] - ptw;
+            V3D v2 =  new_frame->pos() - ptw;
+            double theta = v1.dot(v2)/v1.norm()/v2.norm();
+            //debug_file<<"theta:"<<theta<<std::endl;
+            if(theta>theta_thre){
+                depth_continous = true;
+                break;
+            }
+        }
+        if(depth_continous) break;
+    }
     return depth_continous;
 }
 float violm::calculateEdgeScore(const cv::Mat& img, int x, int y)

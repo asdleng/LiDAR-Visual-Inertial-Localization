@@ -34,13 +34,13 @@ cam_cy: 2.419130336743440e+02
 read_enable: true
 pub_pcl: true
 encoding: "mono8"
-map_dir: "/home/i/vio_in_lidar_map/src/vio_in_lidar_map/map/scans_ntu_3.pcd"
-path_file: "path_ntu_3.txt"
+map_dir: "/home/weilin/VIOLM/src/VIOLM/map/eee_01.pcd"
+path_file: "eee_01.txt"
 lines_file: "line_ntu_3.txt"
 init_num: 100
 common:
     lid_topic:  "/os1_cloud_node1/points"
-    imu_topic:  "/os1_cloud_node1/imu"
+    imu_topic:  "/imu/imu"
 
 preprocess:
     lidar_type: 3  # Ouster

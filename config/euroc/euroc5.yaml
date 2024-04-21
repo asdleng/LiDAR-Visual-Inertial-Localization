@@ -52,9 +52,9 @@ cam_cy: 2.481e+02
 read_enable: true
 pub_pcl: true
 encoding: "mono8"
-map_dir: "/home/i/vio_in_lidar_map/src/vio_in_lidar_map/map/v201.pcd"
-path_file: "path_euroc5.txt"
-lines_file: "line_euroc5.txt"
+map_dir: "/home/weilin/VIOLM/src/VIOLM/map/v2_02.pcd"
+path_file: "path/path5.txt"
+lines_file: "lines/line5.txt"
 # first pose in ground truth
 # -1.001979 0.479302 1.329542 0.592166 0.022374 -0.805147 0.024019
 

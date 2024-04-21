@@ -22,14 +22,14 @@ img_scale : 1.0
 grid_size : 20
 patch_size : 8
 depth_search_radius: 60
-theta_thre: 0.9
-skip_depth: 1.8
+theta_thre: 0.90
+skip_depth: 1.5
 img_enable : 1
 lidar_enable : 1
 equalize: true
 trans_thre: 0.1
 rot_thre: 0.1309
-outlier_threshold: 3000 # 
+outlier_threshold: 1200 # 
 score_threshold: 1
 edgescore_threshold: 500.0
 ncc_en: true
@@ -41,7 +41,7 @@ projection_point_cov: 10000.0
 triangulate_point_cov: 10.0
 enable_projection: true
 enable_triangulate: true
-enable_line: false
+enable_line: true
 enable_BA: false
 laser_point_cov : 0.001 # 
 cam_fx: 4.616e+02
@@ -51,9 +51,9 @@ cam_cy: 2.481e+02
 read_enable: true
 pub_pcl: true
 encoding: "mono8"
-map_dir: "/home/i/vio_in_lidar_map/src/vio_in_lidar_map/map/v101_add.pcd"
-path_file: "path_euroc2.txt"
-lines_file: "line_euroc2.txt"
+map_dir: "/home/weilin/VIOLM/src/VIOLM/map/v1_02.pcd"
+path_file: "path/path2.txt"
+lines_file: "lines/line2.txt"
 # first pose in ground truth
 #  0.3006385, -0.5041507,  0.8095977,0.515356
 #-0.1448253, -0.8631560, -0.4837225,1.996773

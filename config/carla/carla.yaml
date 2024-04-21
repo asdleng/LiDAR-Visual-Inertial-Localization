@@ -46,7 +46,7 @@ cam_cy: 300.0
 read_enable: true
 pub_pcl: true
 pure_imu: false
-map_dir: "/home/i/CARLA_0.9.13/HDMaps/Town03.pcd"
+map_dir: "/home/weilin/CARLA_0.9.13/HDMaps/Town03.pcd"
 origin_pose: [16.5, 134.2,2.01,0,0,0]
 left_coord: true
 common:

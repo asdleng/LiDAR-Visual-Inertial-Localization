@@ -36,7 +36,7 @@ pub_pcl: true
 map_is_based_on_LiDAR: true
 pure_imu: false
 encoding: "mono8"
-map_dir: "/home/i/vio_in_lidar_map/src/vio_in_lidar_map/map/scans_kitti_07.pcd"
+map_dir: "/home/weilin/vio_in_lidar_map/src/vio_in_lidar_map/map/scans_kitti_07.pcd"
 path_file: "path_kitti_07.txt"
 lines_file: "line_kitti_07.txt"
 give_init_v_a: true

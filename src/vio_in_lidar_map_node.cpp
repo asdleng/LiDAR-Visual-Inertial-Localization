@@ -112,7 +112,6 @@ cv::Mat getImageFromMsg(const sensor_msgs::ImageConstPtr& img_msg) {
     else{
         std::cout<<"Wrong encoding, please check the image encoding"<<std::endl;
     }
-
   return img;
 }
 void publish_img(const image_transport::Publisher pubImg){
@@ -409,7 +408,7 @@ void publish_depth_img(const image_transport::Publisher pubDepthImg){
     out_msg.image = img_depth;
     pubDepthImg.publish(out_msg.toImageMsg());
 }
-string filename = "/home/i/vio_in_lidar_map/src/vio_in_lidar_map/map/scans.pcd";
+string filename = "/home/weilin/vio_in_lidar_map/src/vio_in_lidar_map/map/scans.pcd";
 string path_file = "path.txt";
 string lines_file = "line.txt";
 string euroc_file = "euroc.txt";
@@ -456,7 +455,7 @@ int main(int argc, char **argv)
     nh.param<bool>("left_coord",vio_l_m.left_coord,false);
     nh.param<bool>("need_down_size",vio_l_m.need_down_size,true);
     nh.param<bool>("equalize", vio_l_m.equalize,false);
-    nh.param<string>("map_dir", filename,"/home/i/vio_in_lidar_map/src/vio_in_lidar_map/map/scans.pcd");
+    nh.param<string>("map_dir", filename,"/home/weilin/vio_in_lidar_map/src/vio_in_lidar_map/map/scans.pcd");
     nh.param<string>("path_file", path_file,"path.txt");
     nh.param<string>("lines_file", vio_l_m.lines_file,"line.txt");
     nh.param<vector<double>>("origin_pose", origin_pose,vector<double>());
@@ -585,7 +584,6 @@ int main(int argc, char **argv)
 
     //publish_frame_world_line(pubLaserCloudFullLine);
     fpath.open(FILE_DIR(path_file), ios::in);
-    
     std::string s;
     true_path.header.frame_id = "camera_init";
     double true_path_length = 0;
@@ -611,6 +609,7 @@ int main(int argc, char **argv)
     state_point = kf.get_x();
     double t0 = omp_get_wtime();
     while(ros::ok()){
+        
         double t1 = omp_get_wtime();
         if((t1-t0)<1){
             if(pub_pcl)    
@@ -619,8 +618,6 @@ int main(int argc, char **argv)
                 publish_true_path(pubTruePath);
         }
         
-        
-
 
         // count_map++;
         // if ((ros::Time::now()-start).toSec()<2&&count_map>100){

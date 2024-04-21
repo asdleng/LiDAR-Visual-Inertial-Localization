@@ -36,6 +36,7 @@
 #include "line.h"
 #include <photometric_factor.h>
 #include "pose_local_parameterization.h"
+
 namespace lvo{
 
 class violm{
@@ -142,10 +143,10 @@ class violm{
     double linethre3d = 2.0;
     int linethre3d_proj = 10;
     int linethre2d = 20;
-    LineDetection3D detector;
-    std::vector<PLANE> planes;
+    std::unique_ptr<LineDetection3D> detector;
+    
     std::vector<std::vector<cv::Point3d> > lines;
-    std::vector<double> ts;
+    
     std::deque<PointPtr> observed_points;
     M3D Rcl, Rci, Rli, Rcw, Ril, Rwc; // Rci: imu到camera,  Rcw：地面到camera
     V3D Pcl, Pci, Pli, Pcw, Pil, Pwc; // Pci:imu到camera，Pcw：地面到camera
@@ -343,6 +344,7 @@ class violm{
       normvec.reset(new pcl::PointCloud<PointType>(100000,1));
       laserCloudOri.reset(new pcl::PointCloud<PointType>(100000,1));
       corr_normvect.reset(new pcl::PointCloud<PointType>(100000,1));
+      detector = std::make_unique<LineDetection3D>();
     };
     ~violm(){};
 };

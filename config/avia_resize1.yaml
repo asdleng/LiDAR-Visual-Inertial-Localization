@@ -47,7 +47,7 @@ cam_cy: 234.238189
 read_enable: true
 pub_pcl: true
 encoding: "bgr8"
-map_dir: "/home/i/vio_in_lidar_map/src/vio_in_lidar_map/map/scans1.pcd"
+map_dir: "/home/weilin/vio_in_lidar_map/src/vio_in_lidar_map/map/scans1.pcd"
 path_file: "path1.txt"
 lines_file: "line1.txt"
 common:

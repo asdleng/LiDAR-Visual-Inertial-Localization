@@ -34,7 +34,7 @@ cam_cy: 259.1696
 read_enable: true
 pub_pcl: true
 encoding: "bgr8"
-map_dir: "/home/i/vio_in_lidar_map/src/vio_in_lidar_map/map/scans_r3_0.pcd"
+map_dir: "/home/weilin/vio_in_lidar_map/src/vio_in_lidar_map/map/scans_r3_0.pcd"
 path_file: "path_r3_0.txt"
 lines_file: "line_r3_0.txt"
 init_num: 100

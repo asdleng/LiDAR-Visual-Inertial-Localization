@@ -53,9 +53,9 @@ cam_cy: 2.481e+02
 read_enable: true
 pub_pcl: true
 encoding: "mono8"
-map_dir: "/home/weilin/VIOLM/src/VIOLM/map/v1_01.pcd"
-path_file: "path/path1.txt"
-lines_file: "lines/line1.txt"
+map_dir: "/home/weilin/VIOLM/src/VIOLM/map/eee_01.pcd"
+path_file: "path/eee_01.txt"
+lines_file: "laneseee_01.txt"
 # first pose in ground truth
 # 0.3800119,  0.1646913,  0.9102020 0.878612
 # 0.0306792, -0.9857245,  0.1655476 2.14247
@@ -77,8 +77,8 @@ origin_pose: [0.8810,2.1561,0.9538,-2.5888252,1.1064773,-0.6021401]
 
 
 common:
-    lid_topic:  "/livox/lidar"
-    imu_topic:  "/imu0"
+    lid_topic:  "/os1_cloud_node1/points"
+    imu_topic:  "/imu/imu"
 
 preprocess:
     lidar_type: 1 # Livox Avia LiDAR
@@ -98,15 +98,10 @@ mapping:
     0,0,1]
 
 camera:
-    img_topic: /cam0/image_raw
-    #xiyuan
-    Rcl: [0.01486554,0.99955725,-0.0257744,
-         -0.99988093,0.01496721,0.00375619,
-          0.00414030,0.02571553,0.99966073]
-    Pcl: [0.06522291, -0.02070639, -0.00805460]
-    # Rcl: [0.0148655429818, -0.999880929698, 0.00414029679422,
-    #      0.999557249008, 0.0149672133247, 0.025715529948,
-    #       -0.0257744366974, 0.00375618835797, 0.999660727178]
-    # Pcl: [-0.0216401454975, -0.064676986768, 0.00981073058949]
-    blind: 0
-    
+    img_topic: /left/image_raw 
+    # NTU_VIRAL
+    Rcl: [0.0218308, 0.99976, -0.00201407,
+         -0.0131205, 0.00230088, 0.999911,
+          0.999676, -0.0218025, 0.0131676]
+    Pcl: [0.122993,  0.0398643, -0.0577101]
+    blind: 2.5
