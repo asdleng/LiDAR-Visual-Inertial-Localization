@@ -174,9 +174,7 @@ src/visualization.cpp
 src/lsdlines.cpp
 src/LineDetection3D.cpp
 src/CommonFunctions.cpp
-src/line.cpp
-src/pose_local_parameterization.cpp
-src/utility.cpp)
+src/line.cpp)
 add_executable(euroc_read
 src/EuRoC_reader.cpp)
 ## Rename C++ executable without prefix

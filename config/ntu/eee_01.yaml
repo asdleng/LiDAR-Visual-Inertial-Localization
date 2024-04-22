@@ -1,5 +1,5 @@
 feature_extract_enable : 0
-pyr: 3
+pyr: 1
 init_num: 100
 linethre3d: 0.2
 linethre3d_proj: 10.0
@@ -15,7 +15,7 @@ filter_size_surf : 0.15
 filter_size_map : 0.3
 filter_size: 0.2
 down_sample_manner: 1
-down_sample_num: 100
+down_sample_num: 1000
 cube_side_length : 20
 debug : 0
 img_scale : 1.0
@@ -39,11 +39,11 @@ window_size : 20
 pure_imu: false
 img_point_cov : 10000.0 # 1000
 line_cov : 100.0 # 1000
-projection_point_cov: 10000.0
+projection_point_cov: 100000000.0
 triangulate_point_cov: 1.0
-enable_projection: true
-enable_triangulate: true
-enable_line: true
+enable_projection: false
+enable_triangulate: false
+enable_line: false
 enable_BA: false
 laser_point_cov : 0.001 # 
 cam_fx: 4.616e+02
@@ -54,8 +54,9 @@ read_enable: true
 pub_pcl: true
 encoding: "mono8"
 map_dir: "/home/weilin/VIOLM/src/VIOLM/map/eee_01.pcd"
-path_file: "path/eee_01.txt"
+path_file: "path/eee_011.txt"
 lines_file: "laneseee_01.txt"
+t_shift: -0.0199575325817
 # first pose in ground truth
 # 0.3800119,  0.1646913,  0.9102020 0.878612
 # 0.0306792, -0.9857245,  0.1655476 2.14247
@@ -73,7 +74,7 @@ lines_file: "laneseee_01.txt"
 # 0.0951, -0.9673, 0.2352, 2.1561   
 # 0.9245, -0.0016, -0.3811, 0.9338   
 # 0.0000, 0.0000, 0.0000, 1.0000   
-origin_pose: [0.8810,2.1561,0.9538,-2.5888252,1.1064773,-0.6021401]
+# origin_pose: [0.8810,2.1561,0.9538,-2.5888252,1.1064773,-0.6021401]
 
 
 common:

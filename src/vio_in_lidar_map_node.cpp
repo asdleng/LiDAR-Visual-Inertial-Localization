@@ -88,6 +88,7 @@ nav_msgs::Odometry odomAftMapped;
 nav_msgs::Odometry camera_pose;
 geometry_msgs::PoseStamped msg_body_pose;
 nav_msgs::Path path;
+double t_shift;
 ofstream o_pose;
     V3D extT;
     M3D extR;
@@ -136,7 +137,7 @@ void img_cbk(const sensor_msgs::Image::ConstPtr &msg){
     cv::Mat img = getImageFromMsg(msg);
     //cv::imshow("fuck",img);
     std::pair<cv::Mat,double> img_pair;
-    img_pair.first = img; img_pair.second = msg->header.stamp.toSec();
+    img_pair.first = img; img_pair.second = msg->header.stamp.toSec()+t_shift;
     //cv::imshow("fuck1",img_pair.first);
     img_buffer.push_back(img_pair);
     //cv::imshow("fuck2",img_buffer.back().first);
@@ -486,6 +487,7 @@ int main(int argc, char **argv)
     nh.param<int>("pyr",vio_l_m.pyr,1);
     nh.param<double>("delta_dist_thre",vio_l_m.delta_dist_thre,1.5);
     nh.param<double>("skip_depth",vio_l_m.skip_depth,1.0);
+    nh.param<double>("t_shift",t_shift,0.0);
     p_imu->cov_gyr_scale = V3D(cov_gyr_scale,cov_gyr_scale,cov_gyr_scale);
     p_imu->cov_acc_scale = V3D(cov_acc_scale,cov_acc_scale,cov_acc_scale);
     extT<<VEC_FROM_ARRAY(extrinT);

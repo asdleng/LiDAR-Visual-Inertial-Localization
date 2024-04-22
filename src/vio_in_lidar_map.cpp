@@ -38,9 +38,8 @@ void violm::Init(PointCloudXYZI::Ptr ptr){
     state = new StatesGroup;
     state_propagat = new StatesGroup;
     debug_file.open(FILE_DIR("debug_J.txt"), ios::out);
-    exp_file_i.open("/home/weilin/vio_in_lidar_map/src/vio_in_lidar_map/Log/exp.txt",ios::in);
-    res_file_i.open("/home/weilin/vio_in_lidar_map/src/vio_in_lidar_map/Log/response.txt",ios::in);
-    loadExposureTime();
+
+    
     if(read_enable) lines_file_i.open(FILE_DIR(lines_file),ios::in);
     else lines_file_w.open(FILE_DIR(lines_file),ios::out);
     
@@ -189,6 +188,7 @@ void violm::Init(PointCloudXYZI::Ptr ptr){
     }
     detector.reset();
 }
+
 void violm::reset_grid()
 {
     //std::cout<<"fuck"<<std::endl;
@@ -199,6 +199,7 @@ void violm::reset_grid()
     }
     memset(pts_num_in_each_cell, 0, sizeof(int)*length);
 }
+
 void violm::dpi(V3D p, MD(2,3)& J) {
     const double x = p[0];
     const double y = p[1];
@@ -961,10 +962,6 @@ void violm::Process(const cv::Mat &img_, esekfom::esekf<state_ikfom, 12, input_i
         state->rot_end = rotation.toRotationMatrix();
         setKF(kf);
         updateFrameState();
-        
-        
-
-        
         //std::cout<<"地图点个数为："<<map.map_points_.size()<<std::endl;
 
     }
@@ -1066,8 +1063,6 @@ void violm::Process(const cv::Mat &img_, esekfom::esekf<state_ikfom, 12, input_i
 
     }
     double t5 = omp_get_wtime();
-    // if(enable_triangulate)
-    //     geoConstraint(kf);
     if(enable_projection){
         projectionConstraint(kf);
     }
@@ -1324,16 +1319,12 @@ void violm::projectionLine(){
     }
 }
 bool violm::CalculateJLandResL(){
-
     debug_file<<"第"<<frame_nums<<"帧的第"<<iterate_num_L<<"次线特征迭代"<<std::endl;
-
-    
     const int H_DIM = 2*matches2d3d.size();  // 观测维度=匹配个数*2
     Rwi = state->rot_end;                //debug_file<<"state->rot_end: "<<state->rot_end<<std::endl;
     Pwi = state->pos_end;               //debug_file<<"state->pos_end: "<<state->pos_end.transpose()<<std::endl;
     Rcw = Rci * Rwi.transpose();    //debug_file<<"state->vel_end: "<<state->vel_end.transpose()<<std::endl;
     Pcw = -Rci*Rwi.transpose()*Pwi + Pci;   //debug_file<<"state->bias_a: "<<state->bias_a.transpose()<<std::endl;
-
     JL.resize(H_DIM,6);  //debug_file<<"state->gravity: "<<state->gravity.transpose()<<std::endl;
     resL.resize(H_DIM,1);
     JL.setZero();
@@ -1725,16 +1716,7 @@ bool violm::depthContinue2(const V2D &px,const double & depth0, const V3D &ptw){
     }
     return depth_continous;
 }
-float violm::calculateEdgeScore(const cv::Mat& img, int x, int y)
-{
-    // Calculate the gradient using the Sobel operator
 
-
-    // Get the edge score at the specified location (x, y)
-    float score = gradientMagnitude.at<float>(y, x);
-
-    return score;
-}
 void violm::triangulate(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
     triangulate_pts_body->clear();
     // debug_file<<"上一关键帧提取点的个数"<<tracked_points.size()<<std::endl;
@@ -1906,95 +1888,94 @@ bool violm::CalculateJTandResT(){
     bool valid = true;
 
     //triangulate_pts_world->clear();
-        if(iterate_num_T==0){
-        debug_file<<"新来了"<<triangulate_pts_body->size()<<"个三角化点"<<std::endl;
-            // 将地面系下的点转移到body系下，用于优化
-            for(auto it = triangulate_pts_world->begin();it!=triangulate_pts_world->end();it++){
-                V3D p_world(it->x, it->y, it->z);
-                V3D p_body = Rcw * p_world + Pcw;
-                PointType p_body_;
-                p_body_.x = p_body.x();
-                p_body_.y = p_body.y();
-                p_body_.z = p_body.z();
-                p_body_.curvature = 2;  // 标记一下这是老点
-                triangulate_pts_body->push_back(p_body_);
-            }
-            triangulate_pts_world->clear();
+    if(iterate_num_T==0){
+    debug_file<<"新来了"<<triangulate_pts_body->size()<<"个三角化点"<<std::endl;
+        // 将地面系下的点转移到body系下，用于优化
+        for(auto it = triangulate_pts_world->begin();it!=triangulate_pts_world->end();it++){
+            V3D p_world(it->x, it->y, it->z);
+            V3D p_body = Rcw * p_world + Pcw;
+            PointType p_body_;
+            p_body_.x = p_body.x();
+            p_body_.y = p_body.y();
+            p_body_.z = p_body.z();
+            p_body_.curvature = 2;  // 标记一下这是老点
+            triangulate_pts_body->push_back(p_body_);
         }
-        int ii=-1;
-        for(auto it = triangulate_pts_body->begin();it!=triangulate_pts_body->end();it++){
-            ii++;
+        triangulate_pts_world->clear();
+    }
+    int ii=-1;
+    for(auto it = triangulate_pts_body->begin();it!=triangulate_pts_body->end();it++){
+        ii++;
+        V3D p_body(it->x, it->y, it->z);
+        V3D p_world = Rwc*p_body+Pwc;
+        PointType p_world_;
+        p_world_.x = p_world.x();
+        p_world_.y = p_world.y();
+        p_world_.z = p_world.z();
+        
+        PointVector points_near;
+        vector<float> pointSearchSqDis(NUM_MATCH_POINTS);
+        double max_dis;
+        if(it->curvature==2){
+            max_dis = 0.1;
+        }
+        else{
+            max_dis = 0.1;
+        }
+        ikdtree.Nearest_Search(p_world_, NUM_MATCH_POINTS, points_near, pointSearchSqDis, max_dis);
+        /***Check if it is an effective point***/
+        point_selected_surf[ii] = points_near.size() < NUM_MATCH_POINTS ? false : pointSearchSqDis[NUM_MATCH_POINTS - 1] > max_dis ? false
+                                                                                                                                : true;
+        if (!point_selected_surf[ii])
+            continue;
+        VD(4) pabcd;
+        pabcd.setZero();
+        
+        if (esti_plane(pabcd, points_near, 0.1)) //(planeValid)
+        {
+            float pd2 = pabcd(0) * p_world_.x + pabcd(1) * p_world_.y + pabcd(2) * p_world_.z +
+                        pabcd(3);
+            float s = 1 - 0.9 * fabs(pd2) / sqrt(p_body.norm());
+
+            if (s > 0.9) {
+                point_selected_surf[ii] = true;
+                normvec->points[ii].x = pabcd(0);
+                normvec->points[ii].y = pabcd(1);
+                normvec->points[ii].z = pabcd(2);
+                normvec->points[ii].intensity = pd2;
+                res_last[ii] = abs(pd2);
+            }
+        }
+        
+    }
+    
+    effct_feat_num = 0;
+    ii=-1;
+    for (auto it = triangulate_pts_body->begin();it!=triangulate_pts_body->end();it++)
+    {
+        ii++;
+        if (point_selected_surf[ii])
+        {   // 有效观测
+            it->curvature = 1;  // 标记有效
             V3D p_body(it->x, it->y, it->z);
             V3D p_world = Rwc*p_body+Pwc;
             PointType p_world_;
             p_world_.x = p_world.x();
             p_world_.y = p_world.y();
             p_world_.z = p_world.z();
-            
-            
-            PointVector points_near;
-            vector<float> pointSearchSqDis(NUM_MATCH_POINTS);
-            double max_dis;
-            if(it->curvature==2){
-                max_dis = 0.1;
-            }
-            else{
-                max_dis = 0.1;
-            }
-            ikdtree.Nearest_Search(p_world_, NUM_MATCH_POINTS, points_near, pointSearchSqDis, max_dis);
-            /***Check if it is an effective point***/
-            point_selected_surf[ii] = points_near.size() < NUM_MATCH_POINTS ? false : pointSearchSqDis[NUM_MATCH_POINTS - 1] > max_dis ? false
-                                                                                                                                    : true;
-            if (!point_selected_surf[ii])
-                continue;
-            VD(4) pabcd;
-            pabcd.setZero();
-            
-            if (esti_plane(pabcd, points_near, 0.1)) //(planeValid)
-            {
-                float pd2 = pabcd(0) * p_world_.x + pabcd(1) * p_world_.y + pabcd(2) * p_world_.z +
-                            pabcd(3);
-                float s = 1 - 0.9 * fabs(pd2) / sqrt(p_body.norm());
-
-                if (s > 0.9) {
-                    point_selected_surf[ii] = true;
-                    normvec->points[ii].x = pabcd(0);
-                    normvec->points[ii].y = pabcd(1);
-                    normvec->points[ii].z = pabcd(2);
-                    normvec->points[ii].intensity = pd2;
-                    res_last[ii] = abs(pd2);
-                }
-            }
+            // triangulate_pts_world->push_back(p_world_);
+            laserCloudOri->points[effct_feat_num] = triangulate_pts_body->points[ii];
+            corr_normvect->points[effct_feat_num] = normvec->points[ii];
+            effct_feat_num++;
             
         }
-        
-        effct_feat_num = 0;
-        ii=-1;
-        for (auto it = triangulate_pts_body->begin();it!=triangulate_pts_body->end();it++)
-        {
-            ii++;
-            if (point_selected_surf[ii])
-            {   // 有效观测
-                it->curvature = 1;  // 标记有效
-                V3D p_body(it->x, it->y, it->z);
-                V3D p_world = Rwc*p_body+Pwc;
-                PointType p_world_;
-                p_world_.x = p_world.x();
-                p_world_.y = p_world.y();
-                p_world_.z = p_world.z();
-                // triangulate_pts_world->push_back(p_world_);
-                laserCloudOri->points[effct_feat_num] = triangulate_pts_body->points[ii];
-                corr_normvect->points[effct_feat_num] = normvec->points[ii];
-                effct_feat_num++;
-                
-            }
-        }
-        debug_file<<"面约束有效点个数为："<<effct_feat_num<<std::endl;
-        if (effct_feat_num < 1)
-        {
-            valid = false;
-            return valid;
-        }
+    }
+    debug_file<<"面约束有效点个数为："<<effct_feat_num<<std::endl;
+    if (effct_feat_num < 1)
+    {
+        valid = false;
+        return valid;
+    }
     
 
     /*** Computation of Measuremnt Jacobian matrix H and measurents vector ***/
@@ -2018,85 +1999,11 @@ bool violm::CalculateJTandResT(){
         /*** calculate the Measuremnt Jacobian matrix H ***/
         V3D C(state->rot_end.conjugate() * norm_vec);
         V3D A(point_crossmat * C);
-        // if (extrinsic_est_en)
-        // {
-        //     V3D B(point_be_crossmat * s.offset_R_L_I.conjugate() * C); //s.rot.conjugate()*norm_vec);
-        //     ekfom_data.h_x.block<1, 12>(i, 0) << norm_p.x, norm_p.y, norm_p.z, VEC_FROM_ARRAY(A), VEC_FROM_ARRAY(B), VEC_FROM_ARRAY(C);
-        // }
-        // else
-        // {
-        JT_sub.block<1, 6>(i, 0) << norm_p.x, norm_p.y, norm_p.z, VEC_FROM_ARRAY(A);
-        // }   // h_x: 残差的雅可比
 
+        JT_sub.block<1, 6>(i, 0) << norm_p.x, norm_p.y, norm_p.z, VEC_FROM_ARRAY(A);
         /*** Measuremnt: distance to the closest surface/corner ***/
-        resT_sub(i) = -norm_p.intensity;    // h: 残差
+        resT_sub(i) = -norm_p.intensity;    
     }
-    //debug_file<<"JP_sub："<<JP_sub<<std::endl;
-    //debug_file<<"resP_sub："<<resP_sub.transpose()<<std::endl;
     return valid;
 }
-void violm::divideGrayMatByScalar(cv::Mat& grayImage, double divisor) {
-    // 检查输入图像是否为空
-    if (grayImage.empty()) {
-        std::cerr << "输入图像为空" << std::endl;
-        return;
-    }
-    debug_file<<"图像大小："<<grayImage.rows<<","<<grayImage.cols<<std::endl;
-    // 循环遍历图像的每个像素
-    for (int i = 0; i < grayImage.rows; ++i) {
-        for (int j = 0; j < grayImage.cols; ++j) {
-            // 获取当前像素的值并除以给定数值
-            uchar& pixel = grayImage.at<uchar>(i, j);
-            double p2 = linearInterpolation(response,index_response,pixel);
-            
-            p2 /= divisor;
-            if(p2>255) p2 = 255;
-            pixel = linearInterpolation(index_response,response,p2);
-        }
-    }
-}
-void violm::loadExposureTime(){
-    std::string s;
-    getline(res_file_i,s);
-    std::stringstream ss(s);
-    for(int i=0;i<256;i++){
-        index_response.push_back(i);
-        double res;
-        ss>>res;
-        response.push_back(res);
-    }
-    double time;
-    std::vector<double> exp_10;
-    std::vector<double> index_10;
-    int index = 0;
-    while(exp_file_i>>time){
-        index_10.push_back(index);
-        index+=10;
-        exp_10.push_back(time);
-    }
-    for(int i=0;i<index;i++){
-        double exp_t = linearInterpolation(index_10,exp_10,i);
-        exp_time.push_back(exp_t);
-    }
-}
-double violm::linearInterpolation(const std::vector<double>& xValues, const std::vector<double>& yValues, double targetX) {
-    if (xValues.size() != yValues.size()) {
-        std::cerr << "x坐标和y坐标数组长度不一致" << std::endl;
-        return 0.0; // 错误处理，返回默认值
-    }
-
-    for (size_t i = 0; i < xValues.size() - 1; ++i) {
-        if (xValues[i] <= targetX && targetX <= xValues[i + 1]) {
-            double x0 = xValues[i];
-            double x1 = xValues[i + 1];
-            double y0 = yValues[i];
-            double y1 = yValues[i + 1];
-            return y0 + (targetX - x0) * (y1 - y0) / (x1 - x0);
-        }
-    }
-
-    std::cerr << "目标x值不在给定范围内" << std::endl;
-    return 0.0; // 错误处理，返回默认值
-}
-}   //namespace lvo
 

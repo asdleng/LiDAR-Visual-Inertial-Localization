@@ -34,8 +34,8 @@
 #include <LineDetection3D.h>
 #include "utils.h"
 #include "line.h"
-#include <photometric_factor.h>
-#include "pose_local_parameterization.h"
+//#include <photometric_factor.h>
+//#include "pose_local_parameterization.h"
 
 namespace lvo{
 
@@ -312,7 +312,7 @@ class violm{
       const int pyramid_level,
       const int halfpatch_size,
       float* patch);
-    float calculateEdgeScore(const cv::Mat& img, int x, int y);
+
     bool depthContinue(const V2D &px, const double & depth);
     bool depthContinue2(const V2D &px, const double & depth,const V3D &ptw);
     bool featAdd();
@@ -321,16 +321,12 @@ class violm{
     void reduceVector2(vector<V3D> &v, vector<uchar> status);
     void getpatch(cv::Mat img, V2D pc, float* patch_tmp, int level);
     void dpi(V3D p, MD(2,3)& J);
-    void geoConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf);
     void projectionConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf);
     void lineConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf);
     void projectionLine();
     void triangulate(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf);
     void localmapGenerate();
-    bool checkParallax(const vector<cv::Point2f> &pts1, const vector<int> &failed_index, const vector<cv::Point2f> &pts2);
-    void divideGrayMatByScalar(cv::Mat& grayImage, double divisor);
-    void loadExposureTime();
-    double linearInterpolation(const std::vector<double>& xValues, const std::vector<double>& yValues, double targetX);
+    
 
 
     violm(){
