@@ -1,0 +1,4 @@
+在Docker中，创建软连接将你的数据文件夹软连接到这个文件夹下
+ln -s path/of/source path/of/target
+索引数据时，使用相对路径
+./data/xxx
