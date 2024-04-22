@@ -163,6 +163,7 @@ add_library(ikdtree include/ikd-Tree/ikd_Tree.cpp
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
+
 add_executable(${PROJECT_NAME} 
 src/${PROJECT_NAME}_node.cpp
 src/frame.cpp 
@@ -174,9 +175,15 @@ src/visualization.cpp
 src/lsdlines.cpp
 src/LineDetection3D.cpp
 src/CommonFunctions.cpp
-src/line.cpp)
-add_executable(euroc_read
-src/EuRoC_reader.cpp)
+src/line.cpp
+src/modules/util.cpp
+src/modules/3DPointsConstraints.cpp
+src/modules/LineConstraints.cpp
+src/modules/ProjectionConstraints.cpp
+src/modules/PhotometricConstraint.cpp
+)
+# add_executable(euroc_read
+# src/EuRoC_reader.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -192,10 +199,10 @@ target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES} ikdtree
   ${CERES_LIBRARIES}
 )
-target_link_libraries(euroc_read
-  ${catkin_LIBRARIES} ikdtree
-  ${CERES_LIBRARIES}
-)
+# target_link_libraries(euroc_read
+#   ${catkin_LIBRARIES} ikdtree
+#   ${CERES_LIBRARIES}
+# )
 #############
 ## Install ##
 #############

@@ -9,6 +9,8 @@ VIOLM is a Visual-Inertial Odometry (VIO) system designed to running in a LiDAR-
 ## Prerequisites
 - ROS
 - Eigen
+- Ceres
+- Sophus
 - rpg_vikit(https://github.com/uzh-rpg/rpg_vikit)
 - livox_ros_driver(https://github.com/Livox-SDK/livox_ros_driver)
 - Optional: online photometric calibration(https://github.com/tum-vision/online_photometric_calibration)

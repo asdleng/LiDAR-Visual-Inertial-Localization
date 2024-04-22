@@ -29,7 +29,7 @@ lidar_enable : 1
 equalize: true
 trans_thre: 0.1
 rot_thre: 0.1309
-outlier_threshold: 1200 # 
+outlier_threshold: 3000 # 
 score_threshold: 1
 edgescore_threshold: 500.0
 ncc_en: true

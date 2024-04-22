@@ -326,8 +326,8 @@ class violm{
     void projectionLine();
     void triangulate(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf);
     void localmapGenerate();
-    
-
+    void photometricConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf);
+    void addKeyFrame();
 
     violm(){
       local_map.reset(new pcl::PointCloud<PointType>());
@@ -344,15 +344,13 @@ class violm{
     };
     ~violm(){};
 };
-
-
-
-
-
-
-
-
-
-
+template <typename T>
+void violm::reduceVector(vector<T> &v, vector<uchar> status){
+    int j = 0;
+    for (int i = 0; i < int(v.size()); i++)
+        if (status[i])
+            v[j++] = v[i];
+    v.resize(j);
+}
 }
 #endif // VIO_IN_LIDAR_H_
