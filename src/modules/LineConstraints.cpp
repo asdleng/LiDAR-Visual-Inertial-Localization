@@ -220,6 +220,7 @@ bool violm::CalculateJLandResL(){
             MD(2,3) Jdpi1, Jdpi2;
             MD(1,3) Jdphi1, Jdp1, JdR1, Jdt1, Jdphi2, Jdp2, JdR2, Jdt2;    
             M3D p_hat1, p_hat2;
+            M3D Jdp_dt;
             Jdp_dt = Rci * Rwi.transpose(); // 
             dpi(pf1, Jdpi1);// Jdpi就是偏u/偏q，即投影方程关于相机坐标系下三维点的导数
             dpi(pf2, Jdpi2);// Jdpi就是偏u/偏q，即投影方程关于相机坐标系下三维点的导数

@@ -161,7 +161,7 @@ class violm{
     int patch_size, patch_size_total, patch_size_half;
     int iterate_num;
     int iterate_num_L;
-    M3D Jdphi_dR, Jdp_dt, Jdp_dR; 
+     
     KD_TREE<PointType> ikdtree;
     int pyr = 1;
     vk::AbstractCamera* cam;
@@ -186,15 +186,14 @@ class violm{
     double outlier_threshold = 300.0;
     Map map;
     bool enable_projection;
+    M3D Jdphi_dR, Jdp_dR;
     std::list<std::tuple<Point *,int,int>> covisible_pair;
-    MatrixXd J;
-    VectorXd res;
     MatrixXd J_sub;
     MatrixXd img_cov;
     VectorXd res_sub;
     Frame* new_frame;
     double delta_dist_thre;
-    float* patch_wrap;
+    
     float* depth_img;
     int* outlier_map;
     std::vector<int> track_outlier;
@@ -203,7 +202,7 @@ class violm{
     double** para_pose;
     int stage;
     bool need_keyframe;
-    float *patch_cache; // 参考帧到当前帧
+
     int *pts_num_in_each_cell;
     double error;
     double last_error;

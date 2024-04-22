@@ -224,6 +224,7 @@ bool violm::CalculateJPandResP(){
         MD(2,3) Jdpi;
         MD(2,3) Jdphi, Jdp, JdR, Jdt;
         M3D p_hat;
+        M3D Jdp_dt;
         Jdp_dt = Rci * Rwi.transpose(); // 
         dpi(pf, Jdpi);// Jdpi就是偏u/偏q，即投影方程关于相机坐标系下三维点的导数
         p_hat << SKEW_SYM_MATRX(pf);

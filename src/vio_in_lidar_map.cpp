@@ -33,6 +33,7 @@ int violm::obs_points(){
     return k;
 }
 void violm::Init(PointCloudXYZI::Ptr ptr){
+    omp_set_num_threads(16);
     res_last = new float[100000]();
     point_selected_surf = new bool[100000]();
     memset(point_selected_surf, true, sizeof(point_selected_surf));
@@ -62,7 +63,7 @@ void violm::Init(PointCloudXYZI::Ptr ptr){
     grid_n_height = static_cast<int>(height/grid_size); // grid的行数
     length = grid_n_width * grid_n_height;  // grid的个数
     depth_img = new float[height*width];
-    patch_wrap = new float[patch_size_total*pyr];
+    
     // para_pose = new double*[window_size];
     // for(int i=0;i<window_size;i++){
     //     para_pose[i] = new double[7];
@@ -72,7 +73,7 @@ void violm::Init(PointCloudXYZI::Ptr ptr){
     std::for_each(grid.cells.begin(), grid.cells.end(), [&](Cell*& c){ c = new Cell; });
     patch_size_total = patch_size * patch_size;
     patch_size_half = static_cast<int>(patch_size/2);
-    patch_cache = new float[patch_size_total*pyr];
+    
     pts_num_in_each_cell = new int[length];
     memset(pts_num_in_each_cell, 0, sizeof(int)*length);
     outlier_map = new int[length*grid_pts_num*max_ftr_list_num];
@@ -321,36 +322,13 @@ void violm::getpatch(cv::Mat img, V2D pc, float* patch_tmp, int level)
 }
 // 将地图点投影到图像上面
 void violm::projection(){
-    // if(stage==1){
-    //     cv::Sobel(img, gradientX, CV_32F, 1, 0, 3, 1, 0, cv::BORDER_DEFAULT);
-    //     cv::Sobel(img, gradientY, CV_32F, 0, 1, 3, 1, 0, cv::BORDER_DEFAULT);
-    //     // Compute the gradient magnitude
-    //     cv::magnitude(gradientX, gradientY, gradientMagnitude);
-    // }
     observed_points.clear();
     memset(depth_img,0,sizeof(float)*height*width);  // 深度
     
     double t_1 = omp_get_wtime();
-    for(auto it = map.map_points_.begin();it!=map.map_points_.end();it++){
-
-        auto it_ptr = (*it);
-        auto t1 = omp_get_wtime();
-        // if(need_keyframe){
-        //     if(it_ptr->n_obs_>0){
-        //         auto it_obs=it_ptr->obs_.begin();
-        //         while(it_obs!=it_ptr->obs_.end()){
-        //             if(remove_frame_num == it_obs->get()->frame->id_){
-        //                 it_obs = it_ptr->obs_.erase(it_obs);
-        //                 it_ptr->n_obs_--;
-        //                 break;
-        //             }
-        //             else{
-        //                 it_obs++;
-        //             }
-        //         }
-        //     }
-        // }
-        auto t2 = omp_get_wtime();
+    #pragma omp parallel for
+    for(int i=0;i<map.map_points_.size();i++){
+        auto it_ptr = map.map_points_[i];
         V3D pt_w = it_ptr->pos_; // 空间点坐标
         V3D pf = Rcw * pt_w + Pcw;
         V3D pf2 = new_frame->w2f(pt_w);
@@ -358,55 +336,65 @@ void violm::projection(){
         V2D px2 = new_frame->w2c(pt_w);
         //debug_file<<"1: "<< px.transpose()<<" 2: "<<px2.transpose()<<std::endl;
         if(pf[2] > blind&&pf[2]<max_blind){    // 在相机前面,不要太近的点,也不要太远
-            //std::cout<<"第"<<it-map.map_points_.begin()<<"个空间点的像素坐标是："<<px[0]<<","<<px[1]<<std::endl;
-            // 在图像内？
             if(new_frame->cam_->isInFrame(px.cast<int>(), (patch_size_half+1)*8))
-            {
-                observed_points.push_back(it_ptr);
-                float depth = pf[2];
-                int col = int(px[0]);
-                int row = int(px[1]);
-                //debug_file<<"第"<<width*row+col<<"个像素点在图像内且被赋予深度值"<<std::endl;
-                if(depth_img[width*row+col]!=0){
-                    if(depth_img[width*row+col]>depth){
+            {   
+                #pragma omp critical
+                {
+                    observed_points.push_back(it_ptr);
+                }
+                    float depth = pf[2];
+                    int col = int(px[0]);
+                    int row = int(px[1]);
+                    //debug_file<<"第"<<width*row+col<<"个像素点在图像内且被赋予深度值"<<std::endl;
+                
+                #pragma omp critical
+                {    
+                    if(depth_img[width*row+col]!=0){
+                        if(depth_img[width*row+col]>depth){
+                            depth_img[width*row+col] = depth;
+                            adj_pts[width*row+col] = pt_w;
+                        }
+                        else{
+
+                        }
+                    }
+                    else{
                         depth_img[width*row+col] = depth;
                         adj_pts[width*row+col] = pt_w;
                     }
-                    else{
+                }
 
-                    }
-                }
-                else{
-                    depth_img[width*row+col] = depth;
-                    adj_pts[width*row+col] = pt_w;
-                }
-                // if(stage==2){
-                //     //img_depth.data[width*row+col] = depth*10;
-                // }
-                // 对某个像素放depth，但可能只有一部分有深度，没深度的地方是0，这个目的是为了去遮挡 
-                int index=0;
-                int col_grid = static_cast<int>(col/grid_size);
-                int row_grid = static_cast<int>(row/grid_size);
-                index = row_grid*grid_n_width+col_grid;
-                index = std::min(index,(length-1));
-                auto score = vk::shiTomasiScore(img, px[0], px[1]);
-                //V2D pyr_px = px/(1<<(pyr-1));
-                //auto score = vk::shiTomasiScore(pyramid.back(), pyr_px[0], pyr_px[1]);
-                if(score<score_threshold) continue;
-                //auto edgescore = gradientMagnitude.at<float>(px[1], px[0]);
-                // if(edgescore>edgescore_threshold){
-                //     //debug_file<<"edgescore: "<<edgescore<<std::endl;
-                //     continue;
-                // }
-                //std::cout<<"该点将要被放到第"<<index<<"个grid里面"<<std::endl;
-                
-                Candidate c(it_ptr.get(),px);  // 很关键，里面放着该地图点的指针
-                c.score = score;
-                //std::cout<<"该点的score = "<<c.score<<std::endl;
-                auto j = pts_num_in_each_cell[index];
-                //std::cout<<"该grid已经有"<<j<<"个候选点"<<std::endl;
-                grid.cells[index]->push_back(c);    // 把点放到cell里面    
-                pts_num_in_each_cell[index]++;      
+                    // if(stage==2){
+                    //     //img_depth.data[width*row+col] = depth*10;
+                    // }
+                    // 对某个像素放depth，但可能只有一部分有深度，没深度的地方是0，这个目的是为了去遮挡 
+                    int index=0;
+                    int col_grid = static_cast<int>(col/grid_size);
+                    int row_grid = static_cast<int>(row/grid_size);
+                    index = row_grid*grid_n_width+col_grid;
+                    index = std::min(index,(length-1));
+                    auto score = vk::shiTomasiScore(img, px[0], px[1]);
+                    //V2D pyr_px = px/(1<<(pyr-1));
+                    //auto score = vk::shiTomasiScore(pyramid.back(), pyr_px[0], pyr_px[1]);
+                    if(score<score_threshold) continue;
+                    //auto edgescore = gradientMagnitude.at<float>(px[1], px[0]);
+                    // if(edgescore>edgescore_threshold){
+                    //     //debug_file<<"edgescore: "<<edgescore<<std::endl;
+                    //     continue;
+                    // }
+                    //std::cout<<"该点将要被放到第"<<index<<"个grid里面"<<std::endl;
+                    
+                    Candidate c(it_ptr.get(),px);  // 很关键，里面放着该地图点的指针
+                    c.score = score;
+                    //std::cout<<"该点的score = "<<c.score<<std::endl;
+                    auto j = pts_num_in_each_cell[index];
+                    //std::cout<<"该grid已经有"<<j<<"个候选点"<<std::endl;
+                #pragma omp critical
+                {
+                    grid.cells[index]->push_back(c);    // 把点放到cell里面    
+                    pts_num_in_each_cell[index]++;  
+                }      
+                  
             }
         }
     }
@@ -414,38 +402,47 @@ void violm::projection(){
     debug_file<<"====遍历点云耗时"<<t_2-t_1<<std::endl;
     // 遍历grid，按照评分排序，留下每个grid里面评分前十的有关键帧看到的且深度连续的点
         //debug_file<<"第"<<i<<"个cell里面的第"<<num<<"点的空间坐标为"<<pt_w.transpose()<<std::endl;
+    #pragma omp parallel for
     for(int i=0;i<length;i++){
         if(grid.cells[i]->size()==0){
             continue;
         }
-        grid.cells[i]->sort([](const Candidate&p1, const Candidate&p2) {return p1.score > p2.score ; }); // 排序按照分数
-        std::list<Candidate> *point_list_ptr = new std::list<Candidate>;
-        auto it = grid.cells[i]->begin();
-        for(;it!=grid.cells[i]->end();it++){
-            if(it->pt->n_obs_>0||first_frame){   // 如果被观测到, 进行判断，同一个patch内是否深度连续
-                V3D pt_cam(new_frame->w2f(it->pt->pos_));  // 相机坐标系坐标
-                if(pt_cam[2]<skip_depth) continue; // 不要太近的点
-                bool depth_continous = depthContinue2(it->px,pt_cam[2],it->pt->pos_);
-                //cv::circle(img_cp,gird_point,4,cv::Scalar(255, 0, 0), -1, 8);
-                if(depth_continous) continue;
-                point_list_ptr->push_back(*it);
-                cv::Point gird_point(it->px[0],it->px[1]);
-                cv::circle(img_cp,gird_point,4,cv::Scalar(255, 0, 0), -1, 8);   // 合格点 蓝色
-                PointType p;
-                p.x = it->pt->pos_.x();
-                p.y = it->pt->pos_.y();
-                p.z = it->pt->pos_.z();
-                pcl_projected->push_back(p);
-                if(point_list_ptr->size()>=grid_pts_num)     break;
+        #pragma omp critical
+        {    
+            grid.cells[i]->sort([](const Candidate&p1, const Candidate&p2) {return p1.score > p2.score ; }); // 排序按照分数
+        }    
+            std::list<Candidate> *point_list_ptr = new std::list<Candidate>;
+            auto it = grid.cells[i]->begin();
+            for(;it!=grid.cells[i]->end();it++){
+                if(it->pt->n_obs_>0||first_frame){   // 如果被观测到, 进行判断，同一个patch内是否深度连续
+                    V3D pt_cam(new_frame->w2f(it->pt->pos_));  // 相机坐标系坐标
+                    if(pt_cam[2]<skip_depth) continue; // 不要太近的点
+                    bool depth_continous = depthContinue2(it->px,pt_cam[2],it->pt->pos_);
+                    //cv::circle(img_cp,gird_point,4,cv::Scalar(255, 0, 0), -1, 8);
+                    if(depth_continous) continue;
+                    #pragma omp critical
+                    {
+                        point_list_ptr->push_back(*it);
+                    }
+                    cv::Point gird_point(it->px[0],it->px[1]);
+                    cv::circle(img_cp,gird_point,4,cv::Scalar(255, 0, 0), -1, 8);   // 合格点 蓝色
+                    PointType p;
+                    p.x = it->pt->pos_.x();
+                    p.y = it->pt->pos_.y();
+                    p.z = it->pt->pos_.z();
+                    #pragma omp critical
+                    {
+                        pcl_projected->push_back(p);
+                    }
+                    if(point_list_ptr->size()>=grid_pts_num)     break;
+                }
             }
-        }
         
         grid.cells[i] = point_list_ptr;
         //debug_file<<"第"<<frame_nums<<"帧的第"<<i<<"个grid有"<<point_list_ptr->size()<<"个观测点"<<std::endl;
     }
     double t_3 = omp_get_wtime();
-    debug_file<<"====grid排序耗时"<<t_2-t_1<<std::endl;
-
+    debug_file<<"====grid排序耗时"<<t_3-t_2<<std::endl;
 }
 void violm::addObservation(){
     reset_grid();

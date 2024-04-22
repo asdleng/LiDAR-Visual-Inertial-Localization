@@ -7,10 +7,10 @@ linethre2d: 5.0
 lamda: 0.05
 line_threshold: 30
 point_filter_num : 2
-max_iteration : 10
+max_iteration : 15
 dense_map_enable : 1
 cut_points_above_ground: false
-grid_pts_num: 1
+grid_pts_num: 5
 filter_size_surf : 0.15
 filter_size_map : 0.3
 filter_size: 0.2
@@ -23,14 +23,14 @@ grid_size : 20
 patch_size : 8
 depth_search_radius: 60
 theta_thre: 0.90
-skip_depth: 1.5
+skip_depth: 1.2
 img_enable : 1
 lidar_enable : 1
 equalize: true
 trans_thre: 0.1
 rot_thre: 0.1309
-outlier_threshold: 3000 # 
-score_threshold: 1
+outlier_threshold: 1200 # 
+score_threshold: 0.1
 edgescore_threshold: 500.0
 ncc_en: true
 ncc_thre: 0.0
