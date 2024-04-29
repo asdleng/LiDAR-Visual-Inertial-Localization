@@ -176,11 +176,15 @@ src/lsdlines.cpp
 src/LineDetection3D.cpp
 src/CommonFunctions.cpp
 src/line.cpp
+src/IMU_Processing.cpp
+src/preprocess.cpp
 src/modules/util.cpp
 src/modules/3DPointsConstraints.cpp
 src/modules/LineConstraints.cpp
 src/modules/ProjectionConstraints.cpp
 src/modules/PhotometricConstraint.cpp
+src/modules/PointCloudConstraints.cpp
+src/modules/util_node.cpp
 )
 # add_executable(euroc_read
 # src/EuRoC_reader.cpp)

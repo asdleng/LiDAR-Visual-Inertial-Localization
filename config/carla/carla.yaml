@@ -1,5 +1,6 @@
 feature_extract_enable : 0
 pyr: 3
+low_pyr: 0
 init_num: 100
 linethre3d: 10.0
 linethre3d_proj: 10.0
@@ -10,31 +11,31 @@ point_filter_num : 2
 max_iteration : 10
 dense_map_enable : 1
 cut_points_above_ground: false
-grid_pts_num: 1
-filter_size_surf : 0.15
-filter_size_map : 0.3
+grid_pts_num: 5
 filter_size: 0.2
 down_sample_manner: 1
-down_sample_num: 30
+down_sample_num: 10
 cube_side_length : 20
 debug : 0
 img_scale : 1.0
 grid_size : 20
-patch_size : 8
-depth_search_radius: 20
-img_enable : 1
-lidar_enable : 1
-equalize: true
+patch_size : 4
+depth_search_radius: 40
+theta_thre: 0.9999
+skip_depth: 5
+equalize: false
 trans_thre: 0.1
 rot_thre: 0.1309
-outlier_threshold : 600 # 
-score_threshold: 5
-ncc_en: false
-ncc_thre: 0.5
+outlier_threshold : 100 # 
+score_threshold: 10.0
+edgescore_threshold: 4.0
+ncc_en: true
+ncc_thre: -1.0
 window_size : 10
-img_point_cov : 10000.0 # 1000
+img_point_cov : 100.0 # 1000
 line_cov : 10.0 # 1000
-triangulate_point_cov: 10.0
+triangulate_point_cov: 10000.0
+enable_projection: false
 enable_triangulate: false
 enable_line: false
 enable_BA: false
@@ -46,12 +47,13 @@ cam_cy: 300.0
 read_enable: true
 pub_pcl: true
 pure_imu: false
-map_dir: "/home/weilin/CARLA_0.9.13/HDMaps/Town03.pcd"
-origin_pose: [16.5, 134.2,2.01,0,0,0]
-left_coord: true
+encoding: "bgra8"
+map_dir: "/home/weilin/CARLA_0.9.15/HDMaps/Town03.pcd"
+origin_pose: [-74.392572426757539, -75.369823529941399, 2.7908219460522603, -1.0655491463056808e-06, -0.014770865123853016, 1.5735223384867014]
+left_coord: false
 common:
     lid_topic:  "/livox/lidar"
-    imu_topic:  "/carla/ego_vehicle/imu/imu1"
+    imu_topic:  "/carla/ego_vehicle/imu/"
 
 preprocess:
     lidar_type: 1 # Livox Avia LiDAR
@@ -60,10 +62,10 @@ preprocess:
 
 mapping:
     normalized: false
-    acc_cov_scale: 10
-    gyr_cov_scale: 100
-    acc_Q_scale: 1
-    gyr_Q_scale: 1
+    acc_cov_scale: 100
+    gyr_cov_scale: 1000
+    acc_Q_scale: 10
+    gyr_Q_scale: 10
     fov_degree:    90
     extrinsic_T: [ 0,0,0 ]
     extrinsic_R: [ 1, 0, 0,
@@ -73,7 +75,7 @@ mapping:
 camera:
     # img_topic: /usb_cam/image_raw
     # img_topic:  /camera/image_color
-    img_topic: /left_camera/image
+    img_topic: /carla/ego_vehicle/rgb_front/image
     #xiyuan
     Rcl: [0,-1,0,
     0,0,-1,

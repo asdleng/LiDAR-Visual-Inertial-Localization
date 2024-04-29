@@ -31,9 +31,9 @@ void violm::lineConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
     matches2d3d = updatecorrespondence(lines_3d,lines_2d,pin_cam->K(),
     Rcw,Pcw,lamda,line_threshold);
     debug_file<<"线段匹配情况："<<std::endl;
-    debug_file<<"共"<<lines_3d.size()<<"条3d线段"<<std::endl;
-    debug_file<<"共"<<lines_2d.size()<<"条2d线段"<<std::endl;
-    debug_file<<"共"<<matches2d3d.size()<<"个匹配"<<std::endl;
+    //debug_file<<"共"<<lines_3d.size()<<"条3d线段"<<std::endl;
+    //debug_file<<"共"<<lines_2d.size()<<"条2d线段"<<std::endl;
+    //debug_file<<"共"<<matches2d3d.size()<<"个匹配"<<std::endl;
     if(matches2d3d.size()==0) return;
     for(auto it = matches2d3d.begin();it!=matches2d3d.end();it++){
         const auto line3d_tmp = it->line3dt;
@@ -73,7 +73,7 @@ void violm::lineConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
             auto old_state = *state;
             auto valid = CalculateJLandResL();
             if(!valid){
-                debug_file<<"无线段匹配"<<std::endl;
+                //debug_file<<"无线段匹配"<<std::endl;
                 continue;
             }
             //debug_file<<"JL_sub: "<<JL_sub<<std::endl;
@@ -116,7 +116,7 @@ void violm::lineConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
 				meansL+=fabs(resL_sub(j));
 			}
 			meansL = meansL/k;
-			debug_file<<"第"<<iterate_num_L<<"次线约束迭代的平均error为："<<meansL<<std::endl;
+			//debug_file<<"第"<<iterate_num_L<<"次线约束迭代的平均error为："<<meansL<<std::endl;
             
             if(meansL>last_error){
                 // 损失增大，回退
@@ -134,7 +134,7 @@ void violm::lineConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
             }   
             if ((rotL_add.norm() * 57.3f < 0.001f) && (tL_add.norm() * 100.0f < 0.001f))
             {
-                debug_file<<"迭代"<<iterate_num_L<<"次收敛"<<std::endl;
+                //debug_file<<"迭代"<<iterate_num_L<<"次收敛"<<std::endl;
                 break;
             }
             iterate_num_L++;

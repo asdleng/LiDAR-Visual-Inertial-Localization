@@ -1,5 +1,5 @@
 feature_extract_enable : 0
-pyr: 1
+pyr: 3
 init_num: 100
 linethre3d: 0.2
 linethre3d_proj: 10.0
@@ -7,75 +7,57 @@ linethre2d: 10.0
 lamda: 0.03
 line_threshold: 10
 point_filter_num : 2
-max_iteration : 5
+max_iteration : 100
 dense_map_enable : 1
 cut_points_above_ground: false
 grid_pts_num: 1
 filter_size_surf : 0.15
 filter_size_map : 0.3
-filter_size: 0.2
+filter_size: 0.5
 down_sample_manner: 1
-down_sample_num: 1000
+down_sample_num: 100
 cube_side_length : 20
 debug : 0
 img_scale : 1.0
 grid_size : 20
-patch_size : 8
-depth_search_radius: 25
-theta_thre: 0.95
+patch_size : 4
+depth_search_radius: 20
+theta_thre: 0.8
 delta_dist_thre: 0.5
-skip_depth: 0.0
+skip_depth: 8.0
 img_enable : 1
 lidar_enable : 1
 equalize: true
 trans_thre: 0.1
 rot_thre: 0.1309
 outlier_threshold : 1200 # 
-score_threshold: 1
+score_threshold: 0.0
 edgescore_threshold: 500.0
 ncc_en: false
-ncc_thre: 0.5
+ncc_thre: 0.0
 window_size : 20
 pure_imu: false
 img_point_cov : 10000.0 # 1000
 line_cov : 100.0 # 1000
-projection_point_cov: 100000000.0
-triangulate_point_cov: 1.0
-enable_projection: false
-enable_triangulate: false
-enable_line: false
+projection_point_cov: 100.0
+triangulate_point_cov: 10.0
+enable_projection: true
+enable_triangulate: true
+enable_line: true
 enable_BA: false
 laser_point_cov : 0.001 # 
-cam_fx: 4.616e+02
-cam_fy: 4.603e+02
-cam_cx: 3.630e+02
-cam_cy: 2.481e+02
+map_is_based_on_LiDAR: true
+
+
 read_enable: true
 pub_pcl: true
 encoding: "mono8"
 map_dir: "/home/weilin/VIOLM/src/VIOLM/map/eee_01.pcd"
-path_file: "path/eee_011.txt"
-lines_file: "laneseee_01.txt"
+path_file: "path/eee_01.txt"
+lines_file: "lines/eee_01.txt"
 t_shift: -0.0199575325817
-# first pose in ground truth
-# 0.3800119,  0.1646913,  0.9102020 0.878612
-# 0.0306792, -0.9857245,  0.1655476 2.14247
-# 0.9244727, -0.0349858, -0.3796397 0.947262
-# 0 0 0 1
 
-# bias in 2D-3D by Yu Huai
-# 0.9958,   -0.0907,   -0.0072, 0.2072
-# 0.0909,    0.9953,    0.0325, -0.0870
-# 0.0042,   -0.0331,    0.9994, 0.0543
-# 0,0,0,1
-
-## finally, calculate the origin_pose:
-# 0.3690, 0.2537, 0.8941, 0.8810   
-# 0.0951, -0.9673, 0.2352, 2.1561   
-# 0.9245, -0.0016, -0.3811, 0.9338   
-# 0.0000, 0.0000, 0.0000, 1.0000   
-# origin_pose: [0.8810,2.1561,0.9538,-2.5888252,1.1064773,-0.6021401]
-
+origin_pose: [0.0,0,0.0,0,0,0]
 
 common:
     lid_topic:  "/os1_cloud_node1/points"
@@ -92,17 +74,17 @@ mapping:
     gyr_cov_scale: 10000
     acc_Q_scale: 10
     gyr_Q_scale: 10
-    fov_degree:    90
+    fov_degree: 90
     extrinsic_T: [0,0,0]
-    extrinsic_R: [1,0,0,
+    extrinsic_R: [-1,0,0,
     0,1,0,
-    0,0,1]
+    0,0,-1]
 
 camera:
-    img_topic: /left/image_raw 
+    img_topic: /correct_img
     # NTU_VIRAL
-    Rcl: [0.0218308, 0.99976, -0.00201407,
-         -0.0131205, 0.00230088, 0.999911,
-          0.999676, -0.0218025, 0.0131676]
-    Pcl: [0.122993,  0.0398643, -0.0577101]
+    Rcl: [0.02183084,  0.99975965, -0.00201407,
+       -0.01312053,  0.00230088,  0.99991128,
+       0.99967558, -0.02180248,  0.01316761,]
+    Pcl: [0.12419495,-0.01578685,-0.00845058]
     blind: 2.5

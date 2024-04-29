@@ -1,5 +1,5 @@
 feature_extract_enable : 0
-pyr: 1
+pyr: 3
 init_num: 100
 linethre3d: 0.2
 linethre3d_proj: 5.0
@@ -7,10 +7,10 @@ linethre2d: 5.0
 lamda: 0.05
 line_threshold: 30
 point_filter_num : 2
-max_iteration : 15
+max_iteration : 10
 dense_map_enable : 1
 cut_points_above_ground: false
-grid_pts_num: 5
+grid_pts_num: 3
 filter_size_surf : 0.15
 filter_size_map : 0.3
 filter_size: 0.2
@@ -19,30 +19,31 @@ down_sample_num: 30
 cube_side_length : 20
 debug : 0
 img_scale : 1.0
-grid_size : 20
+grid_size : 40
 patch_size : 8
 depth_search_radius: 60
-theta_thre: 0.90
-skip_depth: 1.2
+theta_thre: 0.9
+skip_depth: 0.8
 img_enable : 1
 lidar_enable : 1
 equalize: true
 trans_thre: 0.1
 rot_thre: 0.1309
-outlier_threshold: 1200 # 
-score_threshold: 0.1
-edgescore_threshold: 500.0
-ncc_en: true
-ncc_thre: 0.0
+outlier_threshold: 2000 # 
+score_threshold: 10.0
+edgescore_threshold: 4.0
+ncc_en: false
+ncc_thre: 0.3
 window_size : 10
-img_point_cov : 10000.0 # 1000
-line_cov : 100.0 # 1000
-projection_point_cov: 10000.0
-triangulate_point_cov: 10.0
+img_point_cov : 800.0 # 1000
+line_cov : 10.0 # 1000
+projection_point_cov: 500.0
+triangulate_point_cov: 1000.0
 enable_projection: true
-enable_triangulate: true
+enable_triangulate: false
 enable_line: true
 enable_BA: false
+add_stock: true
 laser_point_cov : 0.001 # 
 cam_fx: 4.616e+02
 cam_fy: 4.603e+02
@@ -109,3 +110,4 @@ camera:
     # Pcl: [-0.0216401454975, -0.064676986768, 0.00981073058949]
     blind: 0
     
+# 封存

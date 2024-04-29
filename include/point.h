@@ -57,6 +57,9 @@ public:
   bool                        have_scaled;
   float                       value;
   bool                        is_outlier = false;
+  bool                        is_edge = false;
+  float grad;
+  Vector2d dir;
   Point(const Vector3d& pos);
   Point(const Vector3d& pos, FeaturePtr ftr);
   ~Point();

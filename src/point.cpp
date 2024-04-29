@@ -62,6 +62,10 @@ void Point::addFrameRef(FeaturePtr ftr)
 {
   obs_.push_front(ftr);
   ++n_obs_;
+  if (n_obs_>100){
+    obs_.pop_back();
+    --n_obs_;
+  }
 }
 
 FeaturePtr Point::findFrameRef(Frame* frame)

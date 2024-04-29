@@ -78,7 +78,7 @@ void violm::triangulate(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
             auto old_state = *state;
             auto valid = CalculateJTandResT();
             if(!valid){
-                debug_file<<"无点面匹配"<<std::endl;
+                //debug_file<<"无点面匹配"<<std::endl;
                 continue;
             }
             //debug_file<<"JT_sub: "<<JT_sub<<std::endl;
@@ -115,10 +115,10 @@ void violm::triangulate(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
 				meansT+=fabs(resT_sub(j));
 			}
 			meansT = meansT/k;
-			debug_file<<"第"<<iterate_num_T<<"次面约束迭代的平均error为："<<meansT<<std::endl;
+			//debug_file<<"第"<<iterate_num_T<<"次面约束迭代的平均error为："<<meansT<<std::endl;
             
             if(meansT>last_error){
-                debug_file<<"损失增大，回退"<<std::endl;
+                //debug_file<<"损失增大，回退"<<std::endl;
                 *state = old_state; 
                 GT = lastGT;
             }
@@ -133,7 +133,7 @@ void violm::triangulate(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
             }   
             if ((rotT_add.norm() * 57.3f < 0.001f) && (tT_add.norm() * 100.0f < 0.001f))
             {
-                debug_file<<"迭代"<<iterate_num_T<<"次收敛"<<std::endl;
+                //debug_file<<"迭代"<<iterate_num_T<<"次收敛"<<std::endl;
                 break;
             }
             iterate_num_T++;
@@ -156,10 +156,14 @@ void violm::triangulate(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
         p_world_.y = p_world.y();
         p_world_.z = p_world.z();
         triangulate_pts_world->push_back(p_world_);
+        V3D pos(p_world.x(),p_world.y(),p_world.z());
+        PointPtr  p(new Point(pos));
+        p->id_ = map.map_points_.size();
+        map.addPoint(p);  
     }
 }
 bool violm::CalculateJTandResT(){
-    debug_file<<"第"<<frame_nums<<"帧的第"<<iterate_num_T<<"次面特征迭代"<<std::endl;
+    //debug_file<<"第"<<frame_nums<<"帧的第"<<iterate_num_T<<"次面特征迭代"<<std::endl;
     Rwi = state->rot_end;                //debug_file<<"state->rot_end: "<<state->rot_end<<std::endl;
     Pwi = state->pos_end;               //debug_file<<"state->pos_end: "<<state->pos_end.transpose()<<std::endl;
     Rcw = Rci * Rwi.transpose();    //debug_file<<"state->vel_end: "<<state->vel_end.transpose()<<std::endl;
@@ -173,7 +177,7 @@ bool violm::CalculateJTandResT(){
 
     //triangulate_pts_world->clear();
     if(iterate_num_T==0){
-    debug_file<<"新来了"<<triangulate_pts_body->size()<<"个三角化点"<<std::endl;
+    //debug_file<<"新来了"<<triangulate_pts_body->size()<<"个三角化点"<<std::endl;
         // 将地面系下的点转移到body系下，用于优化
         for(auto it = triangulate_pts_world->begin();it!=triangulate_pts_world->end();it++){
             V3D p_world(it->x, it->y, it->z);
@@ -254,7 +258,7 @@ bool violm::CalculateJTandResT(){
             
         }
     }
-    debug_file<<"面约束有效点个数为："<<effct_feat_num<<std::endl;
+    //debug_file<<"面约束有效点个数为："<<effct_feat_num<<std::endl;
     if (effct_feat_num < 1)
     {
         valid = false;

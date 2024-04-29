@@ -1,5 +1,5 @@
 feature_extract_enable : 0
-pyr: 3
+pyr: 1
 init_num: 100
 linethre3d: 0.2
 linethre3d_proj: 5.0
@@ -15,13 +15,13 @@ filter_size_surf : 0.15
 filter_size_map : 0.3
 filter_size: 0.2
 down_sample_manner: 1
-down_sample_num: 30
+down_sample_num: 1
 cube_side_length : 10
 debug : 0
 img_scale : 1.0
-grid_size : 20
-patch_size : 4
-depth_search_radius: 30
+grid_size : 40
+patch_size : 16
+depth_search_radius: 60
 theta_thre: 0.9
 skip_depth: 1.0
 img_enable : 1
@@ -30,13 +30,13 @@ equalize: false
 trans_thre: 0.1
 rot_thre: 0.1309
 outlier_threshold : 1200 # 
-score_threshold: 1
-edgescore_threshold: 500.0
-ncc_en: false
+score_threshold: 10.0
+edgescore_threshold: 4.0
+ncc_en: true
 ncc_thre: 0.0
 window_size : 10
 pure_imu: false
-img_point_cov : 10000.0 # 1000
+img_point_cov : 10.0 # 1000
 line_cov : 10.0 # 1000
 projection_point_cov: 1000.0
 triangulate_point_cov: 10.0
@@ -98,7 +98,7 @@ mapping:
     0,0,1]
 
 camera:
-    img_topic: /cam0/image_raw
+    img_topic: /correct_img
     #xiyuan
     Rcl: [0.01486554,0.99955725,-0.0257744,
          -0.99988093,0.01496721,0.00375619,

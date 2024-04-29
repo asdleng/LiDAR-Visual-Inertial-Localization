@@ -49,7 +49,7 @@ void violm::projectionConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& k
         img_last = img_cur;
         pts_last = pts_cur;
 
-        debug_file<<"还剩"<<pts_last.size()<<"个点被追踪"<<std::endl;
+        //debug_file<<"还剩"<<pts_last.size()<<"个点被追踪"<<std::endl;
         // 开始迭代
         iterate_num_P = 0;
         last_error = 10000;
@@ -65,7 +65,7 @@ void violm::projectionConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& k
             auto old_state = *state;
             auto valid = CalculateJPandResP();
             if(!valid){
-                debug_file<<"无跟踪点"<<std::endl;
+                //debug_file<<"无跟踪点"<<std::endl;
                 // for(int iii = 0;iii<track_outlier.size();iii++){
                 //     debug_file<<track_outlier[iii]<<",";
                 // }
@@ -102,10 +102,10 @@ void violm::projectionConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& k
 				meansP+=fabs(resP_sub(j));
 			}
 			meansP = meansP/k;
-			debug_file<<"第"<<iterate_num_P<<"次投影约束迭代的平均error为："<<meansP<<std::endl;
+			//debug_file<<"第"<<iterate_num_P<<"次投影约束迭代的平均error为："<<meansP<<std::endl;
             
             if(meansP>last_error){
-                debug_file<<"损失增大，回退"<<std::endl;
+                //debug_file<<"损失增大，回退"<<std::endl;
                 wrong_time++;
                 *state = old_state; 
                 GP = lastGP;
@@ -122,10 +122,10 @@ void violm::projectionConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& k
             if ((rotP_add.norm() * 57.3f < 0.001f) && (tP_add.norm() * 100.0f < 0.001f) || wrong_time>2)
             {
                 if(wrong_time>2){
-                    debug_file<<"无法降低误差，退出"<<std::endl;
+                    //debug_file<<"无法降低误差，退出"<<std::endl;
                 }
                 else{
-                    debug_file<<"迭代"<<iterate_num_P<<"次收敛"<<std::endl;
+                    //debug_file<<"迭代"<<iterate_num_P<<"次收敛"<<std::endl;
                 }
                 break;
             }
@@ -147,7 +147,7 @@ bool violm::featAdd(){
     // pts_last.clear();
     // pts_cur.clear();
     // ptws_last.clear();
-    if(pts_last.size()>=500) return true;
+    if(pts_last.size()>=10000) return true;
     auto mask = cv::Mat(height, width, CV_8UC1, cv::Scalar(255));
     
     for(int i=0;i<pts_last.size();i++){
@@ -157,27 +157,29 @@ bool violm::featAdd(){
     }
     for(int i=0;i<length;i++){
         if(grid.cells[i]->size()==0) continue;
-        
-        auto it_ptr = grid.cells[i]->begin()->pt;
-        V3D pt_w = it_ptr->pos_;                    // 空间点坐标
-        V3D pf = Rcw * pt_w + Pcw;              // 相机系坐标
-        V2D px = cam->world2cam(pf);    // 像素坐标
-        cv::Point2f pp(px[0],px[1]);
-        if (mask.at<uchar>(pp) == 0) continue;
-        pts_last.push_back(pp);
-        ptws_last.push_back(pt_w);
-        pts_T0.push_back(new_frame->T_f_w_);
-        tracked_points.push_back(pp);
-        tracked_start_index.push_back(all_pts_T.size());
-        is_tran.push_back(false);
-        if(pts_last.size()>=500) break;
-        //cv::circle(mask, pp, 30, 0, -1);
+        for(auto it=grid.cells[i]->begin();it!=grid.cells[i]->end();it++){
+            auto it_ptr = it->pt;
+            if (it_ptr->value<score_threshold&&!first_frame) continue;
+            V3D pt_w = it_ptr->pos_;                    // 空间点坐标
+            V3D pf = Rcw * pt_w + Pcw;              // 相机系坐标
+            V2D px = cam->world2cam(pf);    // 像素坐标
+            cv::Point2f pp(px[0],px[1]);
+            if (mask.at<uchar>(pp) == 0) continue;
+            pts_last.push_back(pp);
+            ptws_last.push_back(pt_w);
+            pts_T0.push_back(new_frame->T_f_w_);
+            tracked_points.push_back(pp);
+            tracked_start_index.push_back(all_pts_T.size());
+            is_tran.push_back(false);
+            if(pts_last.size()>=10000) break;
+            cv::circle(mask, pp, 30, 0, -1);
+        }
     }
     all_tracked_points.push_back(pts_last);
     auto cur_pts_T = std::vector<Sophus::SE3>(pts_last.size(),new_frame->T_f_w_);
     all_pts_T.push_back(cur_pts_T);
 
-    debug_file<<"开始对"<<pts_last.size()<<"个点追踪"<<std::endl;
+    //debug_file<<"开始对"<<pts_last.size()<<"个点追踪"<<std::endl;
     return true;
 }
 bool violm::CalculateJPandResP(){
@@ -208,7 +210,7 @@ bool violm::CalculateJPandResP(){
             // debug_file<<"跟踪位置为："<<pc_ref[0]<<","<<pc_ref[1]<<std::endl;
             // debug_file<<"du:"<<du<<std::endl;
             // debug_file<<"dv:"<<dv<<std::endl;
-            if((du*du+dv*dv)>400){
+            if((du*du+dv*dv)>10){
                 track_outlier[i] = 1;
                 //debug_file<<"外点"<<std::endl;
                 continue;

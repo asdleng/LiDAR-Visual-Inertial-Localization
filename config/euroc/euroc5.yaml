@@ -10,7 +10,7 @@ point_filter_num : 2
 max_iteration : 10
 dense_map_enable : 1
 cut_points_above_ground: false
-grid_pts_num: 1
+grid_pts_num: 3
 filter_size_surf : 0.15
 filter_size_map : 0.3
 filter_size: 0.2
@@ -21,29 +21,30 @@ debug : 0
 img_scale : 1.0
 grid_size : 20
 patch_size : 4
-depth_search_radius: 50
-theta_thre: 0.85
-skip_depth: 1.8
+depth_search_radius: 40
+theta_thre: 0.90
+skip_depth: 1.6
 img_enable : 1
 lidar_enable : 1
 equalize: true
 trans_thre: 0.1
 rot_thre: 0.1309
-outlier_threshold : 2000 # 
-score_threshold: 1
-edgescore_threshold: 500.0
+outlier_threshold : 100 # 
+score_threshold: 1.0
+edgescore_threshold: 4.0
 ncc_en: true
-ncc_thre: 0.5
+ncc_thre: 0.3
 window_size : 10
 pure_imu: false
-img_point_cov : 10000.0 # 1000
-line_cov : 1000.0 # 1000
-projection_point_cov: 10000.0
-triangulate_point_cov: 100.0
+img_point_cov : 1000.0 # 1000
+line_cov : 100.0 # 1000
+projection_point_cov: 1000.0
+triangulate_point_cov: 10.0
 enable_projection: true
 enable_triangulate: false
-enable_line: false
+enable_line: true
 enable_BA: false
+add_stock: true
 laser_point_cov : 0.001 # 
 cam_fx: 4.616e+02
 cam_fy: 4.603e+02
@@ -84,7 +85,7 @@ common:
 preprocess:
     lidar_type: 1 # Livox Avia LiDAR
     scan_line: 6
-    blind: 5 # blind x m disable
+    blind: 0 # blind x m disable
 
 mapping:
     normalized: false

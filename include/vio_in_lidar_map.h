@@ -73,7 +73,7 @@ class violm{
     M3D tracked_R;
     V3D tracked_t;
     bool need_down_size = true;
-    double max_blind = 100;
+    double max_blind = 100000;
     bool map_is_based_on_LiDAR = false;
     std::string lines_file;
     double blind = 0;
@@ -144,7 +144,7 @@ class violm{
     int linethre3d_proj = 10;
     int linethre2d = 20;
     std::unique_ptr<LineDetection3D> detector;
-    
+
     std::vector<std::vector<cv::Point3d> > lines;
     
     std::deque<PointPtr> observed_points;
@@ -188,9 +188,9 @@ class violm{
     bool enable_projection;
     M3D Jdphi_dR, Jdp_dR;
     std::list<std::tuple<Point *,int,int>> covisible_pair;
-    MatrixXd J_sub;
+    
     MatrixXd img_cov;
-    VectorXd res_sub;
+    
     Frame* new_frame;
     double delta_dist_thre;
     
@@ -260,14 +260,17 @@ class violm{
     Grid grid;
     std::deque<double> weights;
     double theta_thre;
-    double edgescore_threshold = 100.0;
+    double edge_threshold = 4.0;
+    int low_pyr=0;
     cv::Mat gradientX, gradientY;
     cv::Mat gradientMagnitude;
+    cv::Mat canny;
     StatesGroup* state;
     StatesGroup* state_propagat;
     std::vector<cv::Mat> pyramid;
     double current_pyr_error;
     double last_pyr_error;
+    bool isPointEdgelet(float& grad,float& gradx,float& grady, int x, int y, float edge_threshold);
     void Init(PointCloudXYZI::Ptr ptr);
     void updateFrameState();
     void setKF(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf);
@@ -277,7 +280,7 @@ class violm{
     void set_camera2lidar(vector<double>& R,  vector<double>& P);
     void set_extrinsic(const V3D &transl, const M3D &rot);
     void reset_grid();
-    bool CalculateJandRes(int level);
+    bool CalculateJandRes(int level,MatrixXd& J_sub,VectorXd& res_sub);
     bool CalculateJLandResL();
     bool CalculateJPandResP();
     bool CalculateJTandResT();
