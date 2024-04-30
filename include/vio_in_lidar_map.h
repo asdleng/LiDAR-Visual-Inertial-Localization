@@ -74,7 +74,7 @@ class violm{
     V3D tracked_t;
     bool need_down_size = true;
     double max_blind = 100000;
-    bool map_is_based_on_LiDAR = false;
+    bool convert_map = false;
     std::string lines_file;
     double blind = 0;
     bool left_coord = false;
@@ -148,6 +148,8 @@ class violm{
     std::vector<std::vector<cv::Point3d> > lines;
     
     std::deque<PointPtr> observed_points;
+    M3D R_convert;
+    V3D P_convert;
     M3D Rcl, Rci, Rli, Rcw, Ril, Rwc; // Rci: imu到camera,  Rcw：地面到camera
     V3D Pcl, Pci, Pli, Pcw, Pil, Pwc; // Pci:imu到camera，Pcw：地面到camera
     Matrix<double, DIM_STATE, DIM_STATE> G, H_T_H,H_T_imgcovinv_H, lastG;
@@ -277,7 +279,8 @@ class violm{
     void setState(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf);
     void setStatePropagate(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf);
     int obs_points();
-    void set_camera2lidar(vector<double>& R,  vector<double>& P);
+    void set_cameraext(vector<double>& R,  vector<double>& P);
+    void set_mapext(vector<double>& R,  vector<double>& P );
     void set_extrinsic(const V3D &transl, const M3D &rot);
     void reset_grid();
     bool CalculateJandRes(int level,MatrixXd& J_sub,VectorXd& res_sub);

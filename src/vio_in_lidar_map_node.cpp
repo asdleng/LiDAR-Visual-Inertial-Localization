@@ -11,6 +11,7 @@
 #include "vio_in_lidar_map_node.h"
 #include <vikit/camera_loader.h>
 #include <vikit/user_input_thread.h>
+
 /* 全局变量、静态变量 */
 
 vio_in_lidar_map_node* vio_in_lidar_map_node::instance = nullptr;
@@ -97,7 +98,7 @@ void vio_in_lidar_map_node::lidar_cbk(const sensor_msgs::PointCloud2::ConstPtr &
     mtx_buffer_lidar.lock();
     PointCloudXYZI::Ptr ptr(new PointCloudXYZI());
     preprocess->process(msg_in,ptr);
-
+    vio_l_m->debug_file<<"新进lidar有"<<ptr->size()<<"个点"<<std::endl;
     std::pair<PointCloudXYZI::Ptr,double> lidar_pair;
     lidar_pair.first = ptr; lidar_pair.second = msg_in->header.stamp.toSec();
     //cv::imshow("fuck1",img_pair.first);
@@ -113,15 +114,17 @@ void vio_in_lidar_map_node::run(){
     p_imu->cov_acc_scale = V3D(cov_acc_scale,cov_acc_scale,cov_acc_scale);
     extT<<VEC_FROM_ARRAY(extrinT);
     extR<<MAT_FROM_ARRAY(extrinR);
-    
+    std::cout<<"LiDAR外参为："<<std::endl;
+    std::cout<<extR<<std::endl;
+    std::cout<<extT<<std::endl;
     vio_l_m->set_extrinsic(extT,extR);
-    vio_l_m->set_camera2lidar(cameraextrinR, cameraextrinT);
+    vio_l_m->set_cameraext(cameraextrinR, cameraextrinT);
+    vio_l_m->set_mapext(mapextR,mapextT);
     if (pcl::io::loadPCDFile<PointType>(filename, *src) == -1) //* load the file
     {
         PCL_ERROR ("Couldn't read file test_pcd.pcd \n");
         return;
     }
-    vio_l_m->ikdtree.Build((*src).points);
     double epsi[24] = {0.001};
     fill(epsi, epsi + 24, 0.001);
     std::function<void(state_ikfom&, esekfom::dyn_share_datastruct<state_ikfom::scalar>&)> func = std::bind(&vio_in_lidar_map_node::h_share_model, this, std::placeholders::_1, std::placeholders::_2);
@@ -135,6 +138,7 @@ void vio_in_lidar_map_node::run(){
     // 读取相机参数
       if(!vk::camera_loader::loadFromRosNs("vio_in_lidar_map", vio_l_m->cam))
     throw std::runtime_error("Camera model not correctly specified.");
+    
     vio_l_m->Init(src);
     vio_l_m->fx = cam_fx;
     vio_l_m->fy = cam_fy;
@@ -150,6 +154,8 @@ void vio_in_lidar_map_node::run(){
     state0.rot = Eigen::AngleAxisd(ea[0], Eigen::Vector3d::UnitX()) * 
                        Eigen::AngleAxisd(ea[1], Eigen::Vector3d::UnitY()) * 
                        Eigen::AngleAxisd(ea[2], Eigen::Vector3d::UnitZ());
+
+    
     kf.change_x(state0);
 
     if(add_stock){
@@ -250,12 +256,13 @@ void vio_in_lidar_map_node::run(){
     while(ros::ok()){
         
         double t1 = omp_get_wtime();
-        if((t1-t0)<5){
+        if((t1-t0)<1){
             if(pub_pcl)    
                 publish_frame_world(pubLaserCloudFull);
-                publish_frame_world_3DLine(pub3DLine);
-                publish_true_path(pubTruePath);
+            publish_frame_world_3DLine(pub3DLine);
+            publish_true_path(pubTruePath);
         }
+        
         
 
         // count_map++;
@@ -316,8 +323,16 @@ void vio_in_lidar_map_node::run(){
             it = imu_buffer.front();
             auto imu2 = *it;    //std::cout<<"imu2: "<<imu2<<std::endl;
             p_imu->intergrate(imu1,imu2,kf,process_img_time);
-            //得到状态(位姿、外参、速度、零偏、重力)
-            //auto P = kf.get_P();
+            if(lidar_buffer.size()>0){
+                // 判断是否有LiDAR点云存在
+                if(lidar_buffer.front().second<imu2.header.stamp.toSec()){
+                    undistort();
+                    double solve_H_time = 0;
+                    Nearest_Points.resize(feats_down_size);
+                    kf.update_iterated_dyn_share_modified(LASER_POINT_COV, solve_H_time);
+                    publish_lidar_frame_world(pubLaserCloudLiDARFull);
+                }
+            }
         }
         //std::cout<<"pos:"<<state_point.pos.x()<<","<<state_point.pos.y()<<","<<state_point.pos.z()<<std::endl;  
         //vio_l_m->debug_file<<"propagated cov: "<<P0.8<state_point.pos.y()<<","<<state_point.pos.z()<<std::endl;  
@@ -325,70 +340,12 @@ void vio_in_lidar_map_node::run(){
         //std::cout<<"2"<<std::endl;
         mtx_buffer_img.lock();
 
-        // vio_l_m->debug_file<<"main中:"<<img.channels()<<std::endl;
-        // vio_l_m->debug_file<<"main中:"<<img.depth()<<std::endl;
         //cv::imshow("fuck3",img_buffer.back().first);
         if(!pure_imu){
             vio_l_m->Process(img_buffer.front().first,kf);
         }
         
-        // // 去畸变
-        // if(lidar_buffer.size()>0){
-        //     auto time = lidar_buffer.back().second;
-        //     auto lidar = lidar_buffer.back().first;
-        //     auto it_pcl = lidar->points.end() - 1;
-        //     for(auto it=imu_buffer_lidar.begin();it!=imu_buffer_lidar.end();it++){
-        //         if(it->get()->header.stamp.toSec()<time-0.1)
-        //             continue;
-        //         if(it->get()->header.stamp.toSec()>time)
-        //             break;
-
-        //         auto head = it - 1;
-        //         auto tail = it;
-        //         head->get().
-        //         R_imu << MAT_FROM_ARRAY(head->rot);
-        //         vel_imu << VEC_FROM_ARRAY(head->vel);
-        //         pos_imu << VEC_FROM_ARRAY(head->pos);
-        //         acc_imu << VEC_FROM_ARRAY(tail->acc);
-        //         angvel_avr << VEC_FROM_ARRAY(tail->gyr);
-        //         for (; it_pcl->curvature / double(1000) > head->offset_time; it_pcl--)
-        //         {
-        //         // cout<<it_pcl->curvature/ double(1000)<<",";
-        //         auto dt = it_pcl->curvature / double(1000) - head->offset_time;
-
-        //         M3D R_i(R_imu * Exp(angvel_avr, dt));
-
-        //         // 本质上是将P_i转换到全局坐标系，再转换到end的坐标系下
-        //         V3D P_i(it_pcl->x, it_pcl->y, it_pcl->z);
-        //         V3D T_ei(pos_imu + vel_imu * dt + 0.5 * acc_imu * dt * dt - imu_state.pos);
-        //         V3D P_compensate = imu_state.offset_R_L_I.conjugate() * (imu_state.rot.conjugate() * (R_i * (imu_state.offset_R_L_I * P_i + imu_state.offset_T_L_I) + T_ei) - imu_state.offset_T_L_I); // not accurate!
-
-        //         // save Undistorted points and their rotation
-        //         it_pcl->x = P_compensate(0);
-        //         it_pcl->y = P_compensate(1);
-        //         it_pcl->z = P_compensate(2);
-
-        //         if (it_pcl == pcl_out.points.begin())
-        //             break;
-        //         }
-
-        //     }
-        // }
-        // /*** undistort each lidar point (backward propagation) ***/
-        // auto it_pcl = pcl_out.points.end() - 1;
-        // for (auto it_kp = IMUpose.end() - 1; it_kp != IMUpose.begin(); it_kp--)
-        // {
-        //     auto head = it_kp - 1;
-        //     auto tail = it_kp;
-        //     R_imu << MAT_FROM_ARRAY(head->rot);
-        //     vel_imu << VEC_FROM_ARRAY(head->vel);
-        //     pos_imu << VEC_FROM_ARRAY(head->pos);
-        //     acc_imu << VEC_FROM_ARRAY(tail->acc);
-        //     angvel_avr << VEC_FROM_ARRAY(tail->gyr);
-            
-            
-        //     // cout<<endl;
-        // }
+        
         state_point = kf.get_x();
         
         publish_odometry(pubOdomAftMapped,pubCamera);

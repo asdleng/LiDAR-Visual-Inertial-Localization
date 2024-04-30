@@ -30,7 +30,7 @@
 #include <visualization.h>
 #include <functional>
 #include "preprocess.h"
-
+#define LASER_POINT_COV (0.01)
 class vio_in_lidar_map_node
 {
 public:
@@ -54,10 +54,13 @@ public:
     int init_num = 100;
     double cov_acc_scale;
     double cov_gyr_scale;
+    double filter_size_surf_min = 0.2;
     vector<double> extrinT;
     vector<double> extrinR;
     vector<double> cameraextrinT;
     vector<double> cameraextrinR;
+    vector<double> mapextR;
+    vector<double> mapextT;
     vector<double> origin_pose;
     vector<double> init_v_a;
     vector<double> init_ba_bg;
@@ -115,12 +118,14 @@ public:
     double match_time = 0;
     bool point_selected_surf[100000] = {0};
     float res_last[100000] = {0.0};
-    
+    pcl::VoxelGrid<PointType> downSizeFilterSurf;
+
     ros::Subscriber sub_lidar;
     ros::Subscriber sub_imu;
     ros::Subscriber sub_img;
     ros::Publisher pubTriangulate;
     ros::Publisher pubLaserCloudFull;
+    ros::Publisher pubLaserCloudLiDARFull;
     ros::Publisher pubLaserCloudFullLine;
     ros::Publisher pubLaserCloudFull_body;
     ros::Publisher pubLaserCloudObserved;
@@ -152,8 +157,12 @@ public:
     void publish_path(const ros::Publisher pubPath);
     void publish_true_path(const ros::Publisher pubTruePath);
     void publish_depth_img(const image_transport::Publisher pubDepthImg);
+    bool undistort();
     void para();
     void run();
+    void publish_lidar_frame_world(const ros::Publisher &pubLaserCloudFull);
+    void RGBpointBodyToWorld(PointType const *const pi, PointType *const po);
+    void pointBodyToWorld(PointType const *const pi, PointType *const po);
     static void static_h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<state_ikfom::scalar> &ekfom_data);
 
     vio_in_lidar_map_node(ros::NodeHandle* nodehandle):
@@ -162,6 +171,8 @@ public:
         extrinR(9, 0.0),
         cameraextrinT(3, 0.0),
         cameraextrinR(9, 0.0),
+        mapextT(3, 0.0),
+        mapextR(9, 0.0),
         origin_pose(6, 0.0),
         init_v_a(6, 0.0),
         init_ba_bg(6, 0.0),
@@ -179,6 +190,7 @@ public:
         sub_img = nh.subscribe<sensor_msgs::Image>(img_topic, 1000, boost::bind(&vio_in_lidar_map_node::img_cbk, this, _1));
         pubTriangulate = nh.advertise<sensor_msgs::PointCloud2>("/triangulate_cloud", 100000);
         pubLaserCloudFull = nh.advertise<sensor_msgs::PointCloud2>("/origin_cloud", 100000);
+        pubLaserCloudLiDARFull = nh.advertise<sensor_msgs::PointCloud2>("/lidar_cloud", 100000);
         pubLaserCloudFullLine = nh.advertise<sensor_msgs::PointCloud2>("/origin_cloud_line", 100000);
         pubLaserCloudFull_body = nh.advertise<sensor_msgs::PointCloud2>("/cloud_registered_body", 100000);
         pubLaserCloudObserved = nh.advertise<sensor_msgs::PointCloud2>("/cloud_observed", 100000);
@@ -196,6 +208,9 @@ public:
         normvec.reset(new PointCloudXYZI(100000, 1));
         laserCloudOri.reset(new PointCloudXYZI(100000, 1));
         corr_normvect.reset(new PointCloudXYZI(100000, 1));
+
+        downSizeFilterSurf.setLeafSize(filter_size_surf_min, filter_size_surf_min, filter_size_surf_min);
+
     
     }
 };

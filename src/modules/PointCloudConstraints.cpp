@@ -1,5 +1,75 @@
 #include "vio_in_lidar_map_node.h"
+bool vio_in_lidar_map_node::undistort(){
+    mtx_buffer_lidar.lock();
+    auto points = lidar_buffer.front().first;
+    downSizeFilterSurf.setInputCloud(points);  // 输入去畸变点云，输出降采样点云(雷达坐标系)
+    downSizeFilterSurf.filter(*feats_down_body); 
+    feats_down_size = feats_down_body->points.size();
+    vio_l_m->debug_file<<"降采样后点云数"<<feats_down_size<<std::endl;
+    feats_down_world->resize(feats_down_size);
+    for(int i=0;i<feats_down_size;i++){
+        pointBodyToWorld(&(feats_down_body->points[i]), &(feats_down_world->points[i]));
+    }
+    lidar_buffer.pop_front();
+    mtx_buffer_lidar.unlock();
+//     auto time = lidar_buffer.back().second;
+//     auto begin_time = time-0.1; // 根据lidar频率
+//     auto lidar = lidar_buffer.back().first;
+//     auto it_pcl = lidar->points.end() - 1;
 
+//     for(auto it=imu_buffer_lidar.begin();it!=imu_buffer_lidar.end();it++){
+//             if(it->get()->header.stamp.toSec()<time-0.1)
+//                 continue;
+//             if(it->get()->header.stamp.toSec()>time)
+//                 break;
+
+//             auto head = it - 1;
+//             auto tail = it;
+//             head->get().
+//             R_imu << MAT_FROM_ARRAY(head->rot);
+//             vel_imu << VEC_FROM_ARRAY(head->vel);
+//             pos_imu << VEC_FROM_ARRAY(head->pos);
+//             acc_imu << VEC_FROM_ARRAY(tail->acc);
+//             angvel_avr << VEC_FROM_ARRAY(tail->gyr);
+//             for (; it_pcl->curvature / double(1000) > head->offset_time; it_pcl--)
+//             {
+//             // cout<<it_pcl->curvature/ double(1000)<<",";
+//             auto dt = it_pcl->curvature / double(1000) - head->offset_time;
+
+//             M3D R_i(R_imu * Exp(angvel_avr, dt));
+
+//             // 本质上是将P_i转换到全局坐标系，再转换到end的坐标系下
+//             V3D P_i(it_pcl->x, it_pcl->y, it_pcl->z);
+//             V3D T_ei(pos_imu + vel_imu * dt + 0.5 * acc_imu * dt * dt - imu_state.pos);
+//             V3D P_compensate = imu_state.offset_R_L_I.conjugate() * (imu_state.rot.conjugate() * (R_i * (imu_state.offset_R_L_I * P_i + imu_state.offset_T_L_I) + T_ei) - imu_state.offset_T_L_I); // not accurate!
+
+//             // save Undistorted points and their rotation
+//             it_pcl->x = P_compensate(0);
+//             it_pcl->y = P_compensate(1);
+//             it_pcl->z = P_compensate(2);
+
+//             if (it_pcl == pcl_out.points.begin())
+//                 break;
+//             }
+
+//         }
+//     }
+//     /*** undistort each lidar point (backward propagation) ***/
+//     auto it_pcl = pcl_out.points.end() - 1;
+//     for (auto it_kp = IMUpose.end() - 1; it_kp != IMUpose.begin(); it_kp--)
+//     {
+//         auto head = it_kp - 1;
+//         auto tail = it_kp;
+//         R_imu << MAT_FROM_ARRAY(head->rot);
+//         vel_imu << VEC_FROM_ARRAY(head->vel);
+//         pos_imu << VEC_FROM_ARRAY(head->pos);
+//         acc_imu << VEC_FROM_ARRAY(tail->acc);
+//         angvel_avr << VEC_FROM_ARRAY(tail->gyr);
+        
+        
+//         // cout<<endl;
+    return true;
+}
 void vio_in_lidar_map_node::h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_data){
     double match_start = omp_get_wtime();
     laserCloudOri->clear();
@@ -18,7 +88,7 @@ void vio_in_lidar_map_node::h_share_model(state_ikfom &s, esekfom::dyn_share_dat
 
         /* transform to world frame */
         V3D p_body(point_body.x, point_body.y, point_body.z);
-        V3D p_global(s.rot * (s.offset_R_L_I * p_body + s.offset_T_L_I) + s.pos);
+        V3D p_global(s.rot * (extR * p_body + extT) + s.pos);
         point_world.x = p_global(0);
         point_world.y = p_global(1);
         point_world.z = p_global(2);
@@ -27,7 +97,6 @@ void vio_in_lidar_map_node::h_share_model(state_ikfom &s, esekfom::dyn_share_dat
         vector<float> pointSearchSqDis(NUM_MATCH_POINTS);
 
         auto &points_near = Nearest_Points[i];
-
         if (ekfom_data.converge)
         {
             /** Find the closest surfaces in the map **/
@@ -93,7 +162,7 @@ void vio_in_lidar_map_node::h_share_model(state_ikfom &s, esekfom::dyn_share_dat
         V3D point_this_be(laser_p.x, laser_p.y, laser_p.z);
         M3D point_be_crossmat;
         point_be_crossmat << SKEW_SYM_MATRX(point_this_be);
-        V3D point_this = s.offset_R_L_I * point_this_be + s.offset_T_L_I;
+        V3D point_this = extR * point_this_be + extT;
         M3D point_crossmat;
         point_crossmat << SKEW_SYM_MATRX(point_this);
 
@@ -106,7 +175,7 @@ void vio_in_lidar_map_node::h_share_model(state_ikfom &s, esekfom::dyn_share_dat
         V3D A(point_crossmat * C);
         if (0)
         {
-            V3D B(point_be_crossmat * s.offset_R_L_I.conjugate() * C); //s.rot.conjugate()*norm_vec);
+            V3D B(point_be_crossmat * extR.conjugate() * C); //s.rot.conjugate()*norm_vec);
             ekfom_data.h_x.block<1, 12>(i, 0) << norm_p.x, norm_p.y, norm_p.z, VEC_FROM_ARRAY(A), VEC_FROM_ARRAY(B), VEC_FROM_ARRAY(C);
         }
         else
@@ -122,4 +191,16 @@ void vio_in_lidar_map_node::h_share_model(state_ikfom &s, esekfom::dyn_share_dat
     solve_time += omp_get_wtime() - solve_start_;
     
     return;
+}
+
+/***将点从lidar坐标系边到地面坐标系***/
+void vio_in_lidar_map_node::pointBodyToWorld(PointType const *const pi, PointType *const po)
+{
+    V3D p_body(pi->x, pi->y, pi->z);
+    V3D p_global(state_point.rot * (extR * p_body + extT) + state_point.pos);
+
+    po->x = p_global(0);
+    po->y = p_global(1);
+    po->z = p_global(2);
+    po->intensity = pi->intensity;
 }

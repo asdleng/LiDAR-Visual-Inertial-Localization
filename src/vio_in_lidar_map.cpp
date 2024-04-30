@@ -11,10 +11,10 @@
 #include "vio_in_lidar_map.h"
 
 namespace lvo{
-void violm::set_camera2lidar(vector<double>& R,  vector<double>& P )
+void violm::set_cameraext(vector<double>& R,  vector<double>& P )
 {
-        Rcl << MAT_FROM_ARRAY(R);
-        Pcl << VEC_FROM_ARRAY(P);
+    Rci << MAT_FROM_ARRAY(R);
+    Pci << VEC_FROM_ARRAY(P);
 }
 void violm::set_extrinsic(const V3D &transl, const M3D &rot)
 {
@@ -22,6 +22,12 @@ void violm::set_extrinsic(const V3D &transl, const M3D &rot)
     Pil = transl;
     Pli = -rot.transpose() * transl;
     Rli = rot.transpose();
+}
+void violm::set_mapext(vector<double>& R,  vector<double>& P )
+{
+    debug_file<<"设置地图转化外参"<<std::endl;
+    R_convert << MAT_FROM_ARRAY(R);
+    P_convert << VEC_FROM_ARRAY(P);
 }
 int violm::obs_points(){
     int k=0;
@@ -45,8 +51,6 @@ void violm::Init(PointCloudXYZI::Ptr ptr){
     if(read_enable) lines_file_i.open(FILE_DIR(lines_file),ios::in);
     else lines_file_w.open(FILE_DIR(lines_file),ios::out);
     
-    Rci = Rcl * Rli;
-    Pci= Rcl*Pli + Pcl; // 求出camera到imu的外参
     debug_file<<"Ric: "<<Rci.transpose()<<std::endl;
     
     Jdphi_dR = Rci; // imu到cam
@@ -86,16 +90,8 @@ void violm::Init(PointCloudXYZI::Ptr ptr){
             it->y = -it->y;
         }
     }
-    if(map_is_based_on_LiDAR){
-        std::cout<<"基于LiDAR构建的地图，转化地图中"<<std::endl;
-        for(auto it=ptr->begin();it!=ptr->end();it++){
-            V3D pos(it->x,it->y,it->z);
-            V3D pos_g = Ril*pos + Pil;
-            it->x = pos_g.x();
-            it->y = pos_g.y();
-            it->z = pos_g.z();
-        }
-    }
+
+
     if(need_down_size){
         if(down_sample_manner == 0){
             downSizeFilter.setInputCloud(ptr);
@@ -111,8 +107,20 @@ void violm::Init(PointCloudXYZI::Ptr ptr){
     else{
         pcl_down = ptr;
     }
-
-    std::cout<<"加载地图中"<<std::endl;
+    // debug_file<<convert_map<<std::endl;
+    // debug_file<<R_convert<<std::endl;
+    // debug_file<<P_convert<<std::endl;
+    if(convert_map){
+        std::cout<<"地图需要转换"<<std::endl;
+        for(auto it=pcl_down->begin();it!=pcl_down->end();it++){
+            V3D pos(it->x,it->y,it->z);
+            V3D pos_g = R_convert*pos + P_convert;
+            it->x = pos_g.x();
+            it->y = pos_g.y();
+            it->z = pos_g.z();
+        }
+    }
+    
     if(cut_points_above_ground){
         auto it = pcl_down->begin();
         while(it!=pcl_down->end()){
@@ -124,7 +132,8 @@ void violm::Init(PointCloudXYZI::Ptr ptr){
             }
         }
     }
-    //ikdtree.Build(pcl_down->points);
+    std::cout<<"加载地图中"<<std::endl;
+    ikdtree.Build(pcl_down->points);
     double t00 = omp_get_wtime();
     for(int i=0;i<pcl_down->size();i++){
         V3D pos(pcl_down->at(i).x,pcl_down->at(i).y,pcl_down->at(i).z);

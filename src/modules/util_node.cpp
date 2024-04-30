@@ -3,7 +3,7 @@
 void vio_in_lidar_map_node::para(){
     nh.param<string>("camera/img_topic", img_topic, "/img");
     nh.param<string>("common/imu_topic", imu_topic, "/imu");
-    nh.param<string>("common/lidar_topic", lidar_topic, "/lidar");
+    nh.param<string>("common/lid_topic", lidar_topic, "/lidar");
     nh.param<double>("theta_thre",vio_l_m->theta_thre,0.8);
     nh.param<bool>("enable_line",vio_l_m->enable_line,true);
     nh.param<bool>("cut_points_above_ground",vio_l_m->cut_points_above_ground,true);
@@ -19,15 +19,18 @@ void vio_in_lidar_map_node::para(){
     nh.param<int>("init_num",init_num,100);
     nh.param<double>("filter_size",vio_l_m->filter_size,0.2);
     nh.param<double>("score_threshold",vio_l_m->score_threshold,50.0);
+    nh.param<vector<double>>("mapextT", mapextT, vector<double>());
+    nh.param<vector<double>>("mapextR", mapextR, vector<double>());
     nh.param<vector<double>>("mapping/extrinsic_T", extrinT, vector<double>());
     nh.param<vector<double>>("mapping/extrinsic_R", extrinR, vector<double>());
-    nh.param<vector<double>>("camera/Pcl", cameraextrinT, vector<double>());
-    nh.param<vector<double>>("camera/Rcl", cameraextrinR, vector<double>());
+    nh.param<vector<double>>("camera/Pci", cameraextrinT, vector<double>());
+    nh.param<vector<double>>("camera/Rci", cameraextrinR, vector<double>());
     nh.param<double>("outlier_threshold", vio_l_m->outlier_threshold, 100.0);
     nh.param<double>("mapping/gyr_cov_scale",cov_gyr_scale,1.0);
     nh.param<double>("mapping/acc_cov_scale",cov_acc_scale,1.0);
     nh.param<double>("mapping/gyr_Q_scale",p_imu->gyr_Q_scale,10.0);
     nh.param<double>("mapping/acc_Q_scale",p_imu->acc_Q_scale,10.0);
+    nh.param<double>("mapping/filter_size_surf_min",filter_size_surf_min,0.2);
     nh.param<double>("img_point_cov",vio_l_m->IMG_COV,100.0);
     nh.param<double>("projection_point_cov",vio_l_m->POINT_COV,100.0);
     nh.param<double>("triangulate_point_cov",vio_l_m->TRIAN_COV,10.0);
@@ -49,7 +52,7 @@ void vio_in_lidar_map_node::para(){
     nh.param<vector<double>>("init_v_a", init_v_a,vector<double>());
     nh.param<vector<double>>("init_ba_bg", init_ba_bg,vector<double>());
     nh.param<vector<double>>("init_g", init_g,vector<double>());
-    nh.param<bool>("map_is_based_on_LiDAR",vio_l_m->map_is_based_on_LiDAR,false);
+    nh.param<bool>("convert_map",vio_l_m->convert_map,false);
     nh.param<bool>("mapping/normalized",p_imu->normalized,true);
     nh.param<bool>("pure_imu",pure_imu,false);
     nh.param<bool>("enable_projection",vio_l_m->enable_projection,true);
@@ -74,6 +77,12 @@ void vio_in_lidar_map_node::para(){
     nh.param<double>("skip_depth",vio_l_m->skip_depth,1.0);
     nh.param<double>("t_shift",t_shift,0.0);
     nh.param<int>("low_pyr",vio_l_m->low_pyr,0);
+    nh.param<double>("preprocess/blind", preprocess->blind, 0.01);
+    nh.param<int>("preprocess/lidar_type", preprocess->lidar_type, AVIA);
+    nh.param<int>("preprocess/scan_line", preprocess->N_SCANS, 16);
+    nh.param<int>("preprocess/scan_rate", preprocess->SCAN_RATE, 10);
+    nh.param<int>("preprocess/point_filter_num", preprocess->point_filter_num, 2);
+    nh.param<bool>("preprocess/feature_extract_enable", preprocess->feature_enabled, false);
     //std::cout<<"成功设置参数"<<std::endl;
 }
 void vio_in_lidar_map_node::static_h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<state_ikfom::scalar> &ekfom_data) {
@@ -176,6 +185,22 @@ void vio_in_lidar_map_node::publish_frame_world(const ros::Publisher & pubLaserC
     }
     // mtx_buffer_pointcloud.unlock();
 }
+void vio_in_lidar_map_node::publish_lidar_frame_world(const ros::Publisher &pubLaserCloudFull)
+{
+    int size = feats_down_body->points.size();
+    PointCloudXYZI::Ptr laserCloudWorld(new PointCloudXYZI(size, 1));
+    for (int i = 0; i < size; i++)
+    {
+        RGBpointBodyToWorld(&feats_down_body->points[i],
+                                &laserCloudWorld->points[i]);
+    }
+
+    sensor_msgs::PointCloud2 laserCloudmsg;
+    pcl::toROSMsg(*laserCloudWorld, laserCloudmsg);
+    laserCloudmsg.header.stamp = ros::Time::now();
+    laserCloudmsg.header.frame_id = "camera_init";
+    pubLaserCloudFull.publish(laserCloudmsg);
+}
 void vio_in_lidar_map_node::publish_local_map(const ros::Publisher & pubLocalMap)
 {
     uint size = vio_l_m->local_map->points.size();
@@ -264,4 +289,14 @@ void vio_in_lidar_map_node::publish_depth_img(const image_transport::Publisher p
     out_msg.encoding = sensor_msgs::image_encodings::TYPE_8UC1;
     out_msg.image = img_depth;
     pubDepthImg.publish(out_msg.toImageMsg());
+}
+void vio_in_lidar_map_node::RGBpointBodyToWorld(PointType const *const pi, PointType *const po)
+{
+    V3D p_body(pi->x, pi->y, pi->z);
+    V3D p_global(state_point.rot * (extR * p_body + extT) + state_point.pos);
+
+    po->x = p_global(0);
+    po->y = p_global(1);
+    po->z = p_global(2);
+    po->intensity = pi->intensity;
 }

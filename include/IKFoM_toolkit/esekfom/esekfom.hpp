@@ -1995,12 +1995,12 @@ namespace esekfom
 
 				if (t > 1 || i == maximum_iter - 1)
 				{
-					if(i == maximum_iter - 1){
-						std::cout<<"达到最大次数"<<std::endl;
-					}
-					else{
-						std::cout<<"收敛了"<<std::endl;
-					}
+					// if(i == maximum_iter - 1){
+					// 	std::cout<<"达到最大次数"<<std::endl;
+					// }
+					// else{
+					// 	std::cout<<"收敛了"<<std::endl;
+					// }
 					L_ = P_;
 					Matrix<scalar_type, 3, 3> res_temp_SO3;
 					MTK::vect<3, scalar_type> seg_SO3;

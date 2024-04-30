@@ -38,6 +38,7 @@ map_dir: "/home/weilin/VIOLM/src/VIOLM/map/eee_01.pcd"
 path_file: "eee_01.txt"
 lines_file: "line_ntu_3.txt"
 init_num: 100
+
 common:
     lid_topic:  "/os1_cloud_node1/points"
     imu_topic:  "/imu/imu"
