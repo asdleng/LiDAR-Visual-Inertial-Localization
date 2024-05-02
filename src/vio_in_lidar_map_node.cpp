@@ -98,7 +98,6 @@ void vio_in_lidar_map_node::lidar_cbk(const sensor_msgs::PointCloud2::ConstPtr &
     mtx_buffer_lidar.lock();
     PointCloudXYZI::Ptr ptr(new PointCloudXYZI());
     preprocess->process(msg_in,ptr);
-    vio_l_m->debug_file<<"新进lidar有"<<ptr->size()<<"个点"<<std::endl;
     std::pair<PointCloudXYZI::Ptr,double> lidar_pair;
     lidar_pair.first = ptr; lidar_pair.second = msg_in->header.stamp.toSec();
     //cv::imshow("fuck1",img_pair.first);
@@ -292,9 +291,10 @@ void vio_in_lidar_map_node::run(){
         }
         //std::cout<<"1"<<std::endl;
 
-        mtx_buffer_imu.lock();
+        
         if(imu_init==false){
             if(imu_buffer.size()>init_num){
+                mtx_buffer_imu.lock();
                 int init_iter_num=0;
                 while(init_iter_num<=init_num){
                     p_imu->IMU_init(imu_buffer,kf,init_iter_num);
@@ -303,40 +303,58 @@ void vio_in_lidar_map_node::run(){
                 ROS_INFO("IMU Initial Done");
                 vio_l_m->debug_file<<"Initial x: "<<kf.get_x()<<std::endl;
                 vio_l_m->debug_file<<"Initial P: "<<kf.get_P()<<std::endl;
+                last_imu_ = imu_buffer.back();
+                mtx_buffer_imu.unlock();
                 //std::cout<<"s.gra: "<< kf.get_x().grav<<std::endl;
             }
             else{
-                //std::cout<<"Wait for more imu to initialize."<<std::endl;
-                mtx_buffer_imu.unlock();
+
                 continue;
             }
         }
-        //std::cout<<fixed<<setprecision(10)<<"imu尾："<<imu_buffer.back()->header.stamp.toSec()<<std::endl;
-        //std::cout<<fixed<<setprecision(10)<<"imu头："<<imu_buffer.front()->header.stamp.toSec()<<std::endl;
-        //std::cout<<"imu个数："<<imu_buffer.size()<<std::endl;
-        //std::cout<<fixed<<setprecision(10)<<"相机时间："<<process_img_time<<std::endl;
-        for(auto it = imu_buffer.front();it->header.stamp.toSec()<process_img_time;){
-            imu_buffer_lidar.push_back(it);
-            auto imu1 = *it;    //std::cout<<"imu1: "<<imu1<<std::endl;
-            last_imu = imu1;
-            imu_buffer.pop_front();
-            it = imu_buffer.front();
-            auto imu2 = *it;    //std::cout<<"imu2: "<<imu2<<std::endl;
-            p_imu->intergrate(imu1,imu2,kf,process_img_time);
-            if(lidar_buffer.size()>0){
-                // 判断是否有LiDAR点云存在
-                if(lidar_buffer.front().second<imu2.header.stamp.toSec()){
-                    undistort();
+        mtx_buffer_imu.lock();
+        if(imu_buffer.size()<2) continue;
+        while(imu_buffer.size()>2){
+            auto it_ptr = imu_buffer.begin()+1;
+            if(it_ptr->get()->header.stamp.toSec()>process_img_time)
+                break;
+            auto imu1 = *(it_ptr-1);
+            last_imu = *imu1;
+            auto imu2 = *it_ptr;
+            ms->imu.push_back(imu2);
+            p_imu->intergrate(*imu1,*imu2,kf,process_img_time);
+            // 判断是否有LiDAR点云存在
+            if(lidar_buffer.size()>0 && enable_lidar){
+                if(lidar_buffer.front().second<imu2->header.stamp.toSec()){
+                    mtx_buffer_lidar.lock();
+                    ms->lidar_end_time = lidar_buffer.front().second;
+                    ms->lidar_beg_time = ms->lidar_end_time-0.1;    //根据频率调节 这里默认0.1s
+                    ms->lidar = lidar_buffer.front().first;
+                    undistort(*ms);
                     double solve_H_time = 0;
                     Nearest_Points.resize(feats_down_size);
                     kf.update_iterated_dyn_share_modified(LASER_POINT_COV, solve_H_time);
                     publish_lidar_frame_world(pubLaserCloudLiDARFull);
+                    lidar_buffer.pop_front();
+                    ms->lidar_beg_time = 0.0; // 重置开始时间
+                    ms->lidar_end_time = 0.0; // 重置结束时间
+                    ms->lidar->clear();       // 清空点云数据
+                    ms->imu.clear();          // 清空IMU数据队列
+                    mtx_buffer_lidar.unlock();
+                }
+                else{
+                    //p_imu->intergrate(*imu1,*imu2,kf,process_img_time);
                 }
             }
+            else{
+                //p_imu->intergrate(*imu1,*imu2,kf,process_img_time);
+            }
+            imu_buffer.pop_front();
         }
+        mtx_buffer_imu.unlock();
         //std::cout<<"pos:"<<state_point.pos.x()<<","<<state_point.pos.y()<<","<<state_point.pos.z()<<std::endl;  
         //vio_l_m->debug_file<<"propagated cov: "<<P0.8<state_point.pos.y()<<","<<state_point.pos.z()<<std::endl;  
-        mtx_buffer_imu.unlock();
+        
         //std::cout<<"2"<<std::endl;
         mtx_buffer_img.lock();
 

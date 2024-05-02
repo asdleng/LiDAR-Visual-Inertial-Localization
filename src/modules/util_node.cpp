@@ -61,6 +61,7 @@ void vio_in_lidar_map_node::para(){
     nh.param<int>("down_sample_num",vio_l_m->down_sample_num,50);
     nh.param<bool>("add_stock",add_stock,false);
     nh.param<bool>("ncc_en",vio_l_m->ncc_en,false);
+    nh.param<bool>("enable_lidar",enable_lidar,false);
     nh.param<double>("ncc_thre",vio_l_m->ncc_thre,0.0);
     nh.param<int>("depth_search_radius",vio_l_m->depth_search_radius,4);
     nh.param<double>("trans_thre",vio_l_m->trans_thre,0.1);

@@ -140,7 +140,10 @@ void ImuProcess::IMU_init(const std::deque<sensor_msgs::Imu::ConstPtr> &imu_buff
   init_P(18, 18) = init_P(19, 19) = init_P(20, 20) = 0.1; // ba
   init_P(21, 21) = init_P(22, 22) = init_P(23, 23) = 0.1;  //g
   kf_state.change_P(init_P);
-
+    Q.block<3, 3>(0, 0).diagonal() = cov_gyr*gyr_Q_scale;
+    Q.block<3, 3>(3, 3).diagonal() = cov_acc*acc_Q_scale;
+    Q.block<3, 3>(6, 6).diagonal() = cov_bias_gyr*gyr_Q_scale;
+    Q.block<3, 3>(9, 9).diagonal() = cov_bias_acc*acc_Q_scale;
 }
 
 void ImuProcess::intergrate(sensor_msgs::Imu imu_1, sensor_msgs::Imu imu_2,
@@ -153,10 +156,7 @@ esekfom::esekf<state_ikfom, 12, input_ikfom> &kf, double img_time){
       dt = imu_2.header.stamp.toSec()-imu_1.header.stamp.toSec();
     }
      
-    Q.block<3, 3>(0, 0).diagonal() = cov_gyr*gyr_Q_scale;
-    Q.block<3, 3>(3, 3).diagonal() = cov_acc*acc_Q_scale;
-    Q.block<3, 3>(6, 6).diagonal() = cov_bias_gyr*gyr_Q_scale;
-    Q.block<3, 3>(9, 9).diagonal() = cov_bias_acc*acc_Q_scale;
+
     input_ikfom in;
     V3D angvel_avr, acc_avr, acc_imu, vel_imu, pos_imu;
     M3D R_imu;
@@ -192,10 +192,6 @@ esekfom::esekf<state_ikfom, 12, input_ikfom> &kf, double img_time){
       return;
     }
     
-    Q.block<3, 3>(0, 0).diagonal() = cov_gyr*gyr_Q_scale;
-    Q.block<3, 3>(3, 3).diagonal() = cov_acc*acc_Q_scale;
-    Q.block<3, 3>(6, 6).diagonal() = cov_bias_gyr*gyr_Q_scale;
-    Q.block<3, 3>(9, 9).diagonal() = cov_bias_acc*acc_Q_scale;
     input_ikfom in;
     V3D angvel_avr, acc_avr, acc_imu, vel_imu, pos_imu;
     M3D R_imu;

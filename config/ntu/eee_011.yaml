@@ -1,49 +1,50 @@
 feature_extract_enable : 0
-pyr: 3
+pyr: 1
 init_num: 100
 linethre3d: 0.2
 linethre3d_proj: 10.0
 linethre2d: 10.0
 lamda: 0.03
 line_threshold: 10
-max_iteration : 10
+
+max_iteration : 100
 dense_map_enable : 1
 cut_points_above_ground: false
-grid_pts_num: 1
+grid_pts_num: 5
 filter_size_surf : 0.15
 filter_size_map : 0.3
 filter_size: 0.5
 down_sample_manner: 1
-down_sample_num: 1000
+down_sample_num: 100
 cube_side_length : 20
 debug : 0
 img_scale : 1.0
 grid_size : 40
-patch_size : 8
-depth_search_radius: 60
-theta_thre: 0.8
+patch_size : 4
+depth_search_radius: 40
+theta_thre: 0.9
 delta_dist_thre: 0.5
-skip_depth: 8.0
+skip_depth: 1.0
 img_enable : 1
 lidar_enable : 1
 equalize: true
 trans_thre: 0.1
 rot_thre: 0.1309
-outlier_threshold : 1200 # 
+outlier_threshold : 8000 # 
 score_threshold: 10.0
 edgescore_threshold: 4.0
-ncc_en: true
-ncc_thre: 0.8
+ncc_en: false
+ncc_thre: 0.0
 window_size : 20
 pure_imu: false
 img_point_cov : 10000.0 # 1000
 line_cov : 100.0 # 1000
-projection_point_cov: 100000.0
-triangulate_point_cov: 100.0
+projection_point_cov: 10000.0
+triangulate_point_cov: 10.0
 enable_projection: true
-enable_triangulate: true
+enable_triangulate: false
 enable_line: false
-enable_lidar: true
+enable_lidar: false
 laser_point_cov : 0.001 # 
 convert_map: true
 mapextR: [-1,0,0,

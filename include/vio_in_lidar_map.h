@@ -163,7 +163,7 @@ class violm{
     int patch_size, patch_size_total, patch_size_half;
     int iterate_num;
     int iterate_num_L;
-     
+    
     KD_TREE<PointType> ikdtree;
     int pyr = 1;
     vk::AbstractCamera* cam;

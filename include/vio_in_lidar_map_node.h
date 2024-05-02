@@ -34,6 +34,9 @@
 class vio_in_lidar_map_node
 {
 public:
+    bool enable_lidar = false;
+    double start_timestamp_;
+    double last_lidar_end_time_;
     static vio_in_lidar_map_node* instance;
     ros::NodeHandle nh;
     sensor_msgs::Imu last_imu;
@@ -65,6 +68,7 @@ public:
     vector<double> init_v_a;
     vector<double> init_ba_bg;
     vector<double> init_g;
+    sensor_msgs::ImuConstPtr last_imu_;
     double cam_fx, cam_fy, cam_cx, cam_cy;
     geometry_msgs::Quaternion geoQuat;
     pcl::PointCloud<PointType>::Ptr src;
@@ -102,12 +106,14 @@ public:
     string lines_file = "line.txt";
     string euroc_file = "euroc.txt";
 
+    PointCloudXYZI::Ptr feats_undistort;
     PointCloudXYZI::Ptr feats_down_body;
     PointCloudXYZI::Ptr feats_down_world;
     PointCloudXYZI::Ptr normvec;
     PointCloudXYZI::Ptr laserCloudOri;
     PointCloudXYZI::Ptr corr_normvect;
     vector<PointVector> Nearest_Points;
+    std::shared_ptr<MeasureGroup> ms;
     double res_mean_last = 0.05, total_residual = 0.0;
     int iterCount = 0, \
     feats_down_size = 0, \
@@ -118,6 +124,9 @@ public:
     double match_time = 0;
     bool point_selected_surf[100000] = {0};
     float res_last[100000] = {0.0};
+    V3D angvel_last;
+    V3D acc_s_last;
+    vector<Pose6D> IMUpose;
     pcl::VoxelGrid<PointType> downSizeFilterSurf;
 
     ros::Subscriber sub_lidar;
@@ -138,6 +147,7 @@ public:
     ros::Publisher pubExt;
     ros::Publisher pub3DLine;
 
+    static bool time_list(PointType &x, PointType &y) {return (x.curvature < y.curvature);};
     void wirteEuRoc(double current_time, nav_msgs::Odometry odom);
     cv::Mat getImageFromMsg(const sensor_msgs::ImageConstPtr& img_msg);
     void publish_img(const image_transport::Publisher pubImg);
@@ -157,7 +167,8 @@ public:
     void publish_path(const ros::Publisher pubPath);
     void publish_true_path(const ros::Publisher pubTruePath);
     void publish_depth_img(const image_transport::Publisher pubDepthImg);
-    bool undistort();
+    bool undistort(MeasureGroup &ms);
+    void UndistortPcl(const MeasureGroup &meas, PointCloudXYZI &pcl_out);
     void para();
     void run();
     void publish_lidar_frame_world(const ros::Publisher &pubLaserCloudFull);
@@ -177,12 +188,14 @@ public:
         init_v_a(6, 0.0),
         init_ba_bg(6, 0.0),
         init_g(3, 0.0)
-    {
+    {   
+        enable_lidar = false;
         instance = this;
         src.reset(new pcl::PointCloud<PointType>);
         p_imu.reset(new ImuProcess());
         vio_l_m.reset(new lvo::violm());
         preprocess.reset(new Preprocess());
+        ms.reset(new MeasureGroup());
         registerPub(nh);
         para();
         sub_lidar = nh.subscribe<sensor_msgs::PointCloud2>(lidar_topic, 1000, boost::bind(&vio_in_lidar_map_node::lidar_cbk, this, _1));
@@ -203,6 +216,7 @@ public:
         pubExt = nh.advertise<geometry_msgs::PoseStamped>("/ext", 100000);
         pub3DLine = nh.advertise<visualization_msgs::Marker>("/3DLine",1000);
 
+        feats_undistort.reset(new PointCloudXYZI());
         feats_down_body.reset(new PointCloudXYZI());
         feats_down_world.reset(new PointCloudXYZI());
         normvec.reset(new PointCloudXYZI(100000, 1));

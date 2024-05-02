@@ -53,17 +53,47 @@ extern M3F Eye3f;
 extern V3D Zero3d;
 extern V3F Zero3f;
 
-/*imu和img观测数据组合*/
-// struct MeasureGroup // Img data and imu dates for the curent process
-// {
-//     MeasureGroup()
-//     {
-//         this->lidar.reset(new PointCloudXYZI());
-//     };
+struct Pose6D
+{
+    float offset_time;
+    float acc[3];
+    float gyr[3];     
+    float vel[3];       
+    float pos[3];       
+    float rot[9];      
+};
 
-//     cv::mat cur_img;
-//     deque<sensor_msgs::Imu::ConstPtr> imu;
-// };
+template<typename T>
+auto set_pose6d(const double t, const Matrix<T, 3, 1> &a, const Matrix<T, 3, 1> &g, \
+                const Matrix<T, 3, 1> &v, const Matrix<T, 3, 1> &p, const Matrix<T, 3, 3> &R)
+{
+    Pose6D rot_kp;
+    rot_kp.offset_time = t;
+    for (int i = 0; i < 3; i++)
+    {
+        rot_kp.acc[i] = a(i);
+        rot_kp.gyr[i] = g(i);
+        rot_kp.vel[i] = v(i);
+        rot_kp.pos[i] = p(i);
+        for (int j = 0; j < 3; j++)  rot_kp.rot[i*3+j] = R(i,j);
+    }
+    return move(rot_kp);
+}
+
+
+/*imu和LiDAR观测数据组合*/
+struct MeasureGroup     // Lidar data and imu dates for the curent process
+{
+    MeasureGroup()
+    {
+        lidar_beg_time = 0.0;
+        this->lidar.reset(new PointCloudXYZI());
+    };
+    double lidar_beg_time;
+    double lidar_end_time;
+    PointCloudXYZI::Ptr lidar;
+    deque<sensor_msgs::Imu::ConstPtr> imu;
+};
 /*状态组合*/
 struct StatesGroup
 {

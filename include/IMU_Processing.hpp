@@ -71,7 +71,6 @@ esekfom::esekf<state_ikfom, 12, input_ikfom> &kf, double img_time);
   V3D cov_bias_acc;
   double first_lidar_time;
 
-private:
   //void UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikfom, 12, input_ikfom> &kf_state, PointCloudXYZI &pcl_in_out);
 
   PointCloudXYZI::Ptr cur_pcl_un_;

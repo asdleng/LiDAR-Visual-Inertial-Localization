@@ -35,13 +35,13 @@ edgescore_threshold: 4.0
 ncc_en: true
 ncc_thre: 0.8
 window_size : 20
-pure_imu: false
+pure_imu: true
 img_point_cov : 10000.0 # 1000
 line_cov : 100.0 # 1000
 projection_point_cov: 100000.0
 triangulate_point_cov: 100.0
-enable_projection: true
-enable_triangulate: true
+enable_projection: false
+enable_triangulate: false
 enable_line: false
 enable_lidar: true
 laser_point_cov : 0.001 # 
@@ -54,9 +54,9 @@ mapextT: [0,0,0]
 read_enable: true
 pub_pcl: true
 encoding: "mono8"
-map_dir: "/home/weilin/VIOLM/src/VIOLM/map/eee_01.pcd"
-path_file: "path/eee_01.txt"
-lines_file: "lines/eee_01.txt"
+map_dir: "/home/weilin/VIOLM/src/VIOLM/map/nya_02.pcd"
+path_file: "path/nya_02.txt"
+lines_file: "lines/nya_02.txt"
 t_shift: -0.0199575325817
 
 origin_pose: [0.0,0,0.0,3.1415926,0,3.1415926]
