@@ -5,7 +5,9 @@
 bool vio_in_lidar_map_node::undistort(MeasureGroup &ms){
     
     feats_undistort = ms.lidar;
-    //UndistortPcl(ms,*feats_undistort);
+    if(enable_undistort){
+        UndistortPcl(ms,*feats_undistort);
+    }
     downSizeFilterSurf.setInputCloud(feats_undistort);  // 输入去畸变点云，输出降采样点云(雷达坐标系)
     downSizeFilterSurf.filter(*feats_down_body); 
     feats_down_size = feats_down_body->points.size();

@@ -6,7 +6,6 @@ linethre3d_proj: 10.0
 linethre2d: 10.0
 lamda: 0.03
 line_threshold: 10
-enable_undistort: false
 max_iteration : 10
 dense_map_enable : 1
 cut_points_above_ground: false
@@ -15,7 +14,7 @@ filter_size_surf : 0.15
 filter_size_map : 0.3
 filter_size: 0.5
 down_sample_manner: 1
-down_sample_num: 100
+down_sample_num: 1000
 cube_side_length : 20
 debug : 0
 img_scale : 1.0
@@ -30,20 +29,20 @@ lidar_enable : 1
 equalize: true
 trans_thre: 0.1
 rot_thre: 0.1309
-outlier_threshold : 200 # 
+outlier_threshold : 1200 # 
 score_threshold: 10.0
 edgescore_threshold: 4.0
-ncc_en: false
-ncc_thre: 0.0
+ncc_en: true
+ncc_thre: 0.8
 window_size : 20
 pure_imu: true
-img_point_cov : 10000.0 # 1000
+img_point_cov : 100000.0 # 1000
 line_cov : 100.0 # 1000
-projection_point_cov: 10000.0
-triangulate_point_cov: 10.0
-enable_projection: false
-enable_triangulate: false
-enable_line: false
+projection_point_cov: 100000.0
+triangulate_point_cov: 100.0
+enable_projection: true
+enable_triangulate: true
+enable_line: true
 enable_lidar: true
 laser_point_cov : 0.001 # 
 convert_map: true
@@ -55,9 +54,9 @@ mapextT: [0,0,0]
 read_enable: true
 pub_pcl: true
 encoding: "mono8"
-map_dir: "/home/weilin/VIOLM/src/VIOLM/map/eee_02.pcd"
-path_file: "path/eee_02.txt"
-lines_file: "lines/eee_02.txt"
+map_dir: "/home/weilin/VIOLM/src/VIOLM/map/sbs_01.pcd"
+path_file: "path/sbs_01.txt"
+lines_file: "lines/sbs_01.txt"
 t_shift: -0.0199575325817
 
 origin_pose: [0.0,0,0.0,3.1415926,0,3.1415926]
@@ -93,5 +92,5 @@ preprocess:
     scan_line: 16
     scan_rate: 10                # only need to be set for velodyne, unit: Hz,
     blind: 4.5
-    point_filter_num : 1
+    point_filter_num : 4
     feature_extract_enable : 0

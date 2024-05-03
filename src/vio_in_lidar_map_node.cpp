@@ -113,9 +113,9 @@ void vio_in_lidar_map_node::run(){
     p_imu->cov_acc_scale = V3D(cov_acc_scale,cov_acc_scale,cov_acc_scale);
     extT<<VEC_FROM_ARRAY(extrinT);
     extR<<MAT_FROM_ARRAY(extrinR);
-    std::cout<<"LiDAR外参为："<<std::endl;
-    std::cout<<extR<<std::endl;
-    std::cout<<extT<<std::endl;
+    // std::cout<<"LiDAR外参为："<<std::endl;
+    // std::cout<<extR<<std::endl;
+    // std::cout<<extT<<std::endl;
     vio_l_m->set_extrinsic(extT,extR);
     vio_l_m->set_cameraext(cameraextrinR, cameraextrinT);
     vio_l_m->set_mapext(mapextR,mapextT);
@@ -322,7 +322,9 @@ void vio_in_lidar_map_node::run(){
             last_imu = *imu1;
             auto imu2 = *it_ptr;
             ms->imu.push_back(imu2);
-            p_imu->intergrate(*imu1,*imu2,kf,process_img_time);
+            if(!enable_undistort){
+                p_imu->intergrate(*imu1,*imu2,kf,process_img_time);
+            }
             // 判断是否有LiDAR点云存在
             if(lidar_buffer.size()>0 && enable_lidar){
                 if(lidar_buffer.front().second<imu2->header.stamp.toSec()){
@@ -343,11 +345,15 @@ void vio_in_lidar_map_node::run(){
                     mtx_buffer_lidar.unlock();
                 }
                 else{
-                    //p_imu->intergrate(*imu1,*imu2,kf,process_img_time);
+                    if(enable_undistort){
+                        p_imu->intergrate(*imu1,*imu2,kf,process_img_time);
+                    }
                 }
             }
             else{
-                //p_imu->intergrate(*imu1,*imu2,kf,process_img_time);
+                if(enable_undistort){
+                        p_imu->intergrate(*imu1,*imu2,kf,process_img_time);
+                }
             }
             imu_buffer.pop_front();
         }

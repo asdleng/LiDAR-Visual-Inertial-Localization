@@ -23,7 +23,7 @@ patch_size : 8
 depth_search_radius: 60
 theta_thre: 0.8
 delta_dist_thre: 0.5
-skip_depth: 8.0
+skip_depth: 1.0
 img_enable : 1
 lidar_enable : 1
 equalize: true

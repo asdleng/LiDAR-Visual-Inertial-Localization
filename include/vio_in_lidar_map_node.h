@@ -34,6 +34,7 @@
 class vio_in_lidar_map_node
 {
 public:
+    bool enable_undistort = true;
     bool enable_lidar = false;
     double start_timestamp_;
     double last_lidar_end_time_;

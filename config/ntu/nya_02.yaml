@@ -23,7 +23,7 @@ patch_size : 8
 depth_search_radius: 60
 theta_thre: 0.8
 delta_dist_thre: 0.5
-skip_depth: 8.0
+skip_depth: 1.0
 img_enable : 1
 lidar_enable : 1
 equalize: true
@@ -35,12 +35,12 @@ edgescore_threshold: 4.0
 ncc_en: true
 ncc_thre: 0.8
 window_size : 20
-pure_imu: true
-img_point_cov : 10000.0 # 1000
+pure_imu: false
+img_point_cov : 100000.0 # 1000
 line_cov : 100.0 # 1000
 projection_point_cov: 100000.0
 triangulate_point_cov: 100.0
-enable_projection: false
+enable_projection: true
 enable_triangulate: false
 enable_line: false
 enable_lidar: true
