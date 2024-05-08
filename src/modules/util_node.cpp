@@ -55,6 +55,7 @@ void vio_in_lidar_map_node::para(){
     nh.param<bool>("convert_map",vio_l_m->convert_map,false);
     nh.param<bool>("mapping/normalized",p_imu->normalized,true);
     nh.param<bool>("pure_imu",pure_imu,false);
+    nh.param<bool>("pure_lidar",pure_lidar,false);
     nh.param<bool>("enable_projection",vio_l_m->enable_projection,true);
     nh.param<bool>("enable_triangulate",vio_l_m->enable_triangulate,false);
     nh.param<int>("down_sample_manner",vio_l_m->down_sample_manner,0);

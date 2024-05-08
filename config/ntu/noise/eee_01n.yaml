@@ -17,7 +17,6 @@ down_sample_manner: 1
 down_sample_num: 1000
 cube_side_length : 20
 debug : 0
-enable_undistort: false
 img_scale : 1.0
 grid_size : 40
 patch_size : 8
@@ -37,6 +36,7 @@ ncc_en: true
 ncc_thre: 0.8
 window_size : 20
 pure_imu: false
+enable_undistort: false
 pure_lidar: false
 img_point_cov : 10000.0 # 1000
 line_cov : 100.0 # 1000
@@ -56,7 +56,7 @@ mapextT: [0,0,0]
 read_enable: true
 pub_pcl: true
 encoding: "mono8"
-map_dir: "/home/weilin/VIOLM/src/VIOLM/map/eee_01.pcd"
+map_dir: "/home/weilin/VIOLM/src/VIOLM/map/eee_01n.pcd"
 path_file: "path/eee_01.txt"
 lines_file: "lines/eee_01.txt"
 t_shift: -0.0199575325817

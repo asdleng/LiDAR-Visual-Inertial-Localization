@@ -9,6 +9,7 @@ line_threshold: 10
 max_iteration : 10
 dense_map_enable : 1
 cut_points_above_ground: false
+enable_undistort: false
 grid_pts_num: 1
 filter_size_surf : 0.15
 filter_size_map : 0.3

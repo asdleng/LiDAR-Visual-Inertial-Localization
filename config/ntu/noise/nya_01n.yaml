@@ -7,6 +7,7 @@ linethre2d: 10.0
 lamda: 0.03
 line_threshold: 10
 max_iteration : 10
+enable_undistort: false
 dense_map_enable : 1
 cut_points_above_ground: false
 grid_pts_num: 1
@@ -17,14 +18,13 @@ down_sample_manner: 1
 down_sample_num: 1000
 cube_side_length : 20
 debug : 0
-enable_undistort: false
 img_scale : 1.0
 grid_size : 40
 patch_size : 8
 depth_search_radius: 60
 theta_thre: 0.8
 delta_dist_thre: 0.5
-skip_depth: 8.0
+skip_depth: 1.0
 img_enable : 1
 lidar_enable : 1
 equalize: true
@@ -36,14 +36,13 @@ edgescore_threshold: 4.0
 ncc_en: true
 ncc_thre: 0.8
 window_size : 20
-pure_imu: false
-pure_lidar: false
+pure_imu: true
 img_point_cov : 10000.0 # 1000
 line_cov : 100.0 # 1000
 projection_point_cov: 100000.0
 triangulate_point_cov: 100.0
-enable_projection: true
-enable_triangulate: true
+enable_projection: false
+enable_triangulate: false
 enable_line: false
 enable_lidar: true
 laser_point_cov : 0.001 # 
@@ -56,9 +55,9 @@ mapextT: [0,0,0]
 read_enable: true
 pub_pcl: true
 encoding: "mono8"
-map_dir: "/home/weilin/VIOLM/src/VIOLM/map/eee_01.pcd"
-path_file: "path/eee_01.txt"
-lines_file: "lines/eee_01.txt"
+map_dir: "/home/weilin/VIOLM/src/VIOLM/map/nya_01n.pcd"
+path_file: "path/nya_01.txt"
+lines_file: "lines/nya_01.txt"
 t_shift: -0.0199575325817
 
 origin_pose: [0.0,0,0.0,3.1415926,0,3.1415926]

@@ -9,6 +9,7 @@ line_threshold: 10
 max_iteration : 10
 dense_map_enable : 1
 cut_points_above_ground: false
+enable_undistort: false
 grid_pts_num: 1
 filter_size_surf : 0.15
 filter_size_map : 0.3
@@ -17,7 +18,6 @@ down_sample_manner: 1
 down_sample_num: 1000
 cube_side_length : 20
 debug : 0
-enable_undistort: false
 img_scale : 1.0
 grid_size : 40
 patch_size : 8
@@ -37,14 +37,13 @@ ncc_en: true
 ncc_thre: 0.8
 window_size : 20
 pure_imu: false
-pure_lidar: false
-img_point_cov : 10000.0 # 1000
+img_point_cov : 100000.0 # 1000
 line_cov : 100.0 # 1000
 projection_point_cov: 100000.0
 triangulate_point_cov: 100.0
 enable_projection: true
 enable_triangulate: true
-enable_line: false
+enable_line: true
 enable_lidar: true
 laser_point_cov : 0.001 # 
 convert_map: true
@@ -56,9 +55,9 @@ mapextT: [0,0,0]
 read_enable: true
 pub_pcl: true
 encoding: "mono8"
-map_dir: "/home/weilin/VIOLM/src/VIOLM/map/eee_01.pcd"
-path_file: "path/eee_01.txt"
-lines_file: "lines/eee_01.txt"
+map_dir: "/home/weilin/VIOLM/src/VIOLM/map/sbs_01n.pcd"
+path_file: "path/sbs_01.txt"
+lines_file: "lines/sbs_01.txt"
 t_shift: -0.0199575325817
 
 origin_pose: [0.0,0,0.0,3.1415926,0,3.1415926]

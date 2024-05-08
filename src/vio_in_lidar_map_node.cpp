@@ -322,7 +322,7 @@ void vio_in_lidar_map_node::run(){
             last_imu = *imu1;
             auto imu2 = *it_ptr;
             ms->imu.push_back(imu2);
-            if(!enable_undistort){
+            if(!enable_undistort&&!pure_lidar){
                 p_imu->intergrate(*imu1,*imu2,kf,process_img_time);
             }
             // 判断是否有LiDAR点云存在
@@ -345,13 +345,13 @@ void vio_in_lidar_map_node::run(){
                     mtx_buffer_lidar.unlock();
                 }
                 else{
-                    if(enable_undistort){
+                    if(enable_undistort&&!pure_lidar){
                         p_imu->intergrate(*imu1,*imu2,kf,process_img_time);
                     }
                 }
             }
             else{
-                if(enable_undistort){
+                if(enable_undistort&&!pure_lidar){
                         p_imu->intergrate(*imu1,*imu2,kf,process_img_time);
                 }
             }

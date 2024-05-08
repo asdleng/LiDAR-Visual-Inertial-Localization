@@ -37,9 +37,9 @@ ncc_thre: 0.8
 window_size : 20
 pure_imu: false
 img_point_cov : 100000.0 # 1000
-line_cov : 100.0 # 1000
+line_cov : 1000.0 # 1000
 projection_point_cov: 100000.0
-triangulate_point_cov: 100.0
+triangulate_point_cov: 1000.0
 enable_projection: true
 enable_triangulate: true
 enable_line: true

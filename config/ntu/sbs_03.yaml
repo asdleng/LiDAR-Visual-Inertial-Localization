@@ -35,7 +35,8 @@ edgescore_threshold: 4.0
 ncc_en: true
 ncc_thre: 0.8
 window_size : 20
-pure_imu: true
+pure_imu: false
+pure_lidar: false
 img_point_cov : 100000.0 # 1000
 line_cov : 100.0 # 1000
 projection_point_cov: 100000.0

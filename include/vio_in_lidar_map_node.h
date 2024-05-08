@@ -44,6 +44,7 @@ public:
     double process_img_time;
     double current_imu_time;
     bool pure_imu = false;
+    bool pure_lidar = false;
     bool give_init_v_a = false;
     image_transport::Publisher img_pub;
     std::string encoding;
