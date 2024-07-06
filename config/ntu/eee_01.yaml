@@ -57,7 +57,7 @@ encoding: "mono8"
 map_dir: "/home/weilin/VIOLM/src/VIOLM/map/eee_01.pcd"
 path_file: "path/eee_01.txt"
 lines_file: "lines/eee_01.txt"
-t_shift: -0.0199575325817
+t_shift: 0.0
 give_init_v_a: false
 origin_pose: [0.0,0,0.0,3.1415926,0,3.1415926]
 
