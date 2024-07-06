@@ -1,13 +1,3 @@
-/*
- * @Author: asdleng lengjianghao2006@163.com
- * @Date: 2023-02-23 22:45:53
- * @LastEditors: asdleng lengjianghao2006@163.com
- * @LastEditTime: 2023-05-03 14:24:34
- * @FilePath: /vio_in_lidar_map/src/vio_in_lidar_map/include/frame.h
- * @Description: 
- * 
- * Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
- */
 // This file is part of SVO - Semi-direct Visual Odometry.
 //
 // Copyright (C) 2014 Christian Forster <forster at ifi dot uzh dot ch>

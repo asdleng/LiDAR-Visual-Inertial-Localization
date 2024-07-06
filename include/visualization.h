@@ -1,13 +1,3 @@
-/*
- * @Author: asdleng lengjianghao2006@163.com
- * @Date: 2023-04-05 21:49:32
- * @LastEditors: asdleng lengjianghao2006@163.com
- * @LastEditTime: 2023-04-05 22:30:17
- * @FilePath: /vio_in_lidar_map/src/vio_in_lidar_map/include/visualization.h
- * @Description: 
- * 
- * Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
- */
 #pragma once
 
 #include <ros/ros.h>
@@ -29,7 +19,7 @@
 #include <std_msgs/ColorRGBA.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <vio_in_lidar_map.h>
+#include <lmlvil.h>
 extern ros::Publisher pub_key_poses;
 class CameraPoseVisualization {
 public:

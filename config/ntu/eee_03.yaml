@@ -1,4 +1,3 @@
-feature_extract_enable : 0
 pyr: 3
 init_num: 100
 linethre3d: 0.2
@@ -6,7 +5,6 @@ linethre3d_proj: 10.0
 linethre2d: 10.0
 lamda: 0.03
 line_threshold: 10
-
 max_iteration : 10
 dense_map_enable : 1
 cut_points_above_ground: false
@@ -36,7 +34,7 @@ edgescore_threshold: 4.0
 ncc_en: false
 ncc_thre: 0.0
 window_size : 20
-pure_imu: true
+enable_vis: false
 img_point_cov : 10000.0 # 1000
 line_cov : 100.0 # 1000
 projection_point_cov: 10000.0

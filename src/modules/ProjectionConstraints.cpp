@@ -1,7 +1,7 @@
-#include "vio_in_lidar_map.h"
+#include "lmlvil.h"
 namespace lvo{
 /*投影约束相关内容*/
-void violm::projectionConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
+void lmlvil::projectionConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
     vector<uchar> status;
     vector<float> err;
     if(first_frame){
@@ -143,7 +143,7 @@ void violm::projectionConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& k
         }
     }
 }
-bool violm::featAdd(){
+bool lmlvil::featAdd(){
     // pts_last.clear();
     // pts_cur.clear();
     // ptws_last.clear();
@@ -182,7 +182,7 @@ bool violm::featAdd(){
     //debug_file<<"开始对"<<pts_last.size()<<"个点追踪"<<std::endl;
     return true;
 }
-bool violm::CalculateJPandResP(){
+bool lmlvil::CalculateJPandResP(){
     const int H_DIM = ptws_last.size();  // 
     Rwi = state->rot_end;                //debug_file<<"state->rot_end: "<<state->rot_end<<std::endl;
     Pwi = state->pos_end;               //debug_file<<"state->pos_end: "<<state->pos_end.transpose()<<std::endl;

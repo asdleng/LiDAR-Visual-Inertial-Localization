@@ -1,10 +1,12 @@
-# VIOLM
-VIOLM is a Visual-Inertial Odometry (VIO) system designed to running in a LiDAR-generated point cloud map. The features of the system are as follows:
-- Rather than integrating a registration module into an existing VIO framework, our approach directly projects the map points into the camera.
-- The direct method and feature-based method are jointly utilized for system accuracy and robustness.
-- A 2D-3D line corresponding module and a 3D point alignment module are designed to further improve the pose estimation.
+# LiDAR-Visual-IMU Fusion Localization
+This project presents a robust LiDAR-Visual-Inertial locaization system running within a LiDAR-generated point cloud map, named (LM-LVIL). The code is developed based on FAST-LIVO and FAST-LIO2. The contribution of the system are as follows:
+- Under the IESKF framework, the system fuses IMU integration, camera visual measurements, and LiDAR measurements within a LiDAR-built point cloud map with good synergy. 
+- For visual measurements, map points are directly projected into camera frames for photometric constraints, rather than matching between the generated visual feature points and the point cloud map.
+- In addition to photometric constraints in visual measurements, projection constraints, line constraints, and 3D point alignment constraints are considered to enhance the system accuracy and robustness.
 
-![Image text](https://github.com/asdleng/VIOLM/blob/main/img/v1_01.png)
+![Image text](https://github.com/asdleng/VIOLM/blob/main/img/systemoverview.png)
+
+![Image text](https://github.com/asdleng/VIOLM/blob/main/img/illustrate.png)
 
 ## Prerequisites
 - ROS
@@ -13,24 +15,32 @@ VIOLM is a Visual-Inertial Odometry (VIO) system designed to running in a LiDAR-
 - Sophus
 - rpg_vikit(https://github.com/uzh-rpg/rpg_vikit)
 - livox_ros_driver(https://github.com/Livox-SDK/livox_ros_driver)
-- Optional: online photometric calibration(https://github.com/tum-vision/online_photometric_calibration)
-Please use the online photometric calibration above to generate corrected images in case of running the EuRoC dataset.
+
+For Ubuntu 22.04 users, it is recommended to use Docker.
 
 ## Build
 ```bash
-mkdir your_workspace_name
-cd your_workspace_name
-mkdir src
-cd src
+mkdir your_workspace_name 
 ```
-First, you should build the livox_ros_driver and rpg_vikit
+First, you should install Sophus
 ```bash
+cd your_workspace_name && cd src
+git clone https://github.com/strasdat/Sophus.git
+cd Sophus && mkdir build && cd build
+cmake .. && make -j8
+```
+Then you should build the livox_ros_driver and rpg_vikit
+```bash
+cd your_workspace_name && cd src
 git clone https://github.com/uzh-rpg/rpg_vikit.git
 git clone https://github.com/Livox-SDK/livox_ros_driver.git
 cd ..
-catkin_make
+catkin_make -DCATKIN_WHITELIST_PACKAGES="livox_ros_driver"
+catkin_make -DCATKIN_WHITELIST_PACKAGES="vikit_common"
+catkin_make -DCATKIN_WHITELIST_PACKAGES="vikit_ros"
+catkin_make -DCATKIN_WHITELIST_PACKAGES="lmlvil"
 ```
-If error occured, you should use -DCATKIN_WHITE_LIST to specify the build order.
+If error occured, you should use -DCATKIN_WHITELIST_PACKAGES to specify the build order.
 Now you can clone this repository and build.
 ```bash
 cd src
@@ -47,8 +57,8 @@ roslaunch vio_in_lidar_map xxxx.launch
 ```
 
 ## Rosbag Example
-- EuRoC dataset(https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets)
-The V1 room of EuRoC dataset contains a laser-scan-built point cloud map. So V101~V203 is suitable for our system.
+- NTU-Viral dataset(https://ntu-aris.github.io/ntu_viral_dataset/)
+Build the pointcloud map using LiDAR-based SLAM methods and save the map into /map folder.
 
 
 

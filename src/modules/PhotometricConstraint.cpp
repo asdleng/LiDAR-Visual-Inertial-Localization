@@ -1,7 +1,7 @@
-#include "vio_in_lidar_map.h"
+#include "lmlvil.h"
 namespace lvo{
 /*光度约束相关内容*/
-void violm::photometricConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
+void lmlvil::photometricConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
     setStatePropagate(kf);
     *state = *state_propagat;
     auto origin_cov = state->cov;
@@ -31,7 +31,7 @@ void violm::photometricConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& 
                 continue;
             }
             const int eff_num = res_sub.size();
-            debug_file<<"观测维度："<<eff_num<<std::endl;
+            //debug_file<<"观测维度："<<eff_num<<std::endl;
             Eigen::MatrixXd H_sub = MatrixXd::Zero(eff_num, DIM_STATE);
             for(int l = 0; l < 6; l++){
                 H_sub.col(l) = J_sub.col(l);
@@ -53,7 +53,7 @@ void violm::photometricConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& 
                 means += fabs(res_sub(j));
             }
             means = means / k;
-            debug_file<<"误差为："<<means<<std::endl;
+            //debug_file<<"误差为："<<means<<std::endl;
             if(means > last_error){
                 wrong_time++;
                 *state = old_state;
@@ -88,7 +88,7 @@ void violm::photometricConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& 
 
 
 
-bool violm::CalculateJandRes(int level,MatrixXd& J_sub,VectorXd& res_sub){
+bool lmlvil::CalculateJandRes(int level,MatrixXd& J_sub,VectorXd& res_sub){
     Rwi = state->rot_end;
     Pwi = state->pos_end;
     Rcw = Rci * Rwi.transpose();

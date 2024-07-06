@@ -1,12 +1,20 @@
-feature_extract_enable : 0
-pyr: 3
+
+# IMU
 init_num: 100
+# System
+enable_lidar: true
+enable_vis : true
+enable_projection: true
+enable_triangulate: true
+enable_line: false
+
+# Visual
+pyr: 3
 linethre3d: 0.2
 linethre3d_proj: 10.0
 linethre2d: 10.0
 lamda: 0.03
 line_threshold: 10
-enable_undistort: false
 max_iteration : 10
 dense_map_enable : 1
 cut_points_above_ground: false
@@ -15,7 +23,7 @@ filter_size_surf : 0.15
 filter_size_map : 0.3
 filter_size: 0.5
 down_sample_manner: 1
-down_sample_num: 100
+down_sample_num: 1000
 cube_side_length : 20
 debug : 0
 img_scale : 1.0
@@ -36,15 +44,12 @@ edgescore_threshold: 4.0
 ncc_en: false
 ncc_thre: 0.0
 window_size : 20
-pure_imu: true
+
 img_point_cov : 10000.0 # 1000
 line_cov : 100.0 # 1000
 projection_point_cov: 10000.0
 triangulate_point_cov: 10.0
-enable_projection: false
-enable_triangulate: false
-enable_line: false
-enable_lidar: true
+
 laser_point_cov : 0.001 # 
 convert_map: true
 mapextR: [-1,0,0,
@@ -58,7 +63,7 @@ encoding: "mono8"
 map_dir: "/home/weilin/VIOLM/src/VIOLM/map/eee_02.pcd"
 path_file: "path/eee_02.txt"
 lines_file: "lines/eee_02.txt"
-t_shift: -0.0199575325817
+t_shift: 0.0
 
 origin_pose: [0.0,0,0.0,3.1415926,0,3.1415926]
 
@@ -68,10 +73,10 @@ common:
 
 mapping:
     normalized: false
-    acc_cov_scale: 100
-    gyr_cov_scale: 10000
-    acc_Q_scale: 10
-    gyr_Q_scale: 10
+    acc_cov_scale: 10
+    gyr_cov_scale: 1000
+    acc_Q_scale: 1
+    gyr_Q_scale: 1
     fov_degree: 90
     filter_size_surf_min: 0.5
     extrinsic_T: [0,0,0]
@@ -91,7 +96,7 @@ camera:
 preprocess:
     lidar_type: 3                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR, 
     scan_line: 16
-    scan_rate: 10                # only need to be set for velodyne, unit: Hz,
+    scan_rate: 10                
     blind: 4.5
     point_filter_num : 1
     feature_extract_enable : 0

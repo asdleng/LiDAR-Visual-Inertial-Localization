@@ -1,13 +1,3 @@
-/*
- * @Author: asdleng lengjianghao2006@163.com
- * @Date: 2023-02-22 13:19:19
- * @LastEditors: asdleng lengjianghao2006@163.com
- * @LastEditTime: 2023-03-31 12:37:39
- * @FilePath: /vio_in_lidar_map/src/vio_in_lidar_map/include/use-ikfom.hpp
- * @Description: 
- * 
- * Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
- */
 #ifndef USE_IKFOM_H
 #define USE_IKFOM_H
 

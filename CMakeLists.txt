@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(vio_in_lidar_map)
+project(lmlvil)
 add_definitions(-DROOT_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -25,7 +25,6 @@ find_package(catkin REQUIRED COMPONENTS
   vikit_ros
   cv_bridge
   image_transport
-  #send_chassisdata
 )
 find_package(Ceres REQUIRED)
 find_package(OpenMP QUIET)
@@ -165,26 +164,26 @@ add_library(ikdtree include/ikd-Tree/ikd_Tree.cpp
 ## The recommended prefix ensures that target names across packages don't collide
 
 add_executable(${PROJECT_NAME} 
-src/${PROJECT_NAME}_node.cpp
-src/frame.cpp 
-src/map.cpp 
-src/point.cpp 
-src/use-ikfom.cpp
-src/vio_in_lidar_map.cpp
-src/visualization.cpp
-src/lsdlines.cpp
-src/LineDetection3D.cpp
-src/CommonFunctions.cpp
-src/line.cpp
+src/lmlvil_node.cpp
+src/util/frame.cpp 
+src/util/map.cpp 
+src/util/point.cpp 
+src/util/use-ikfom.cpp
+src/lmlvil.cpp
+src/util/visualization.cpp
+src/modules/Line/lsdlines.cpp
+src/modules/Line/LineDetection3D.cpp
+src/modules/Line/CommonFunctions.cpp
+src/modules/Line/LineConstraints.cpp
+src/modules/Line/line.cpp
 src/IMU_Processing.cpp
 src/preprocess.cpp
-src/modules/util.cpp
+src/util/util.cpp
 src/modules/3DPointsConstraints.cpp
-src/modules/LineConstraints.cpp
 src/modules/ProjectionConstraints.cpp
 src/modules/PhotometricConstraint.cpp
 src/modules/PointCloudConstraints.cpp
-src/modules/util_node.cpp
+src/util/util_node.cpp
 )
 # add_executable(euroc_read
 # src/EuRoC_reader.cpp)

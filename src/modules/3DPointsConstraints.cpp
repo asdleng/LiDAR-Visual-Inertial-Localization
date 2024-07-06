@@ -1,10 +1,8 @@
-#include "vio_in_lidar_map.h"
+#include "lmlvil.h"
 namespace lvo{
 
-void violm::triangulate(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
+void lmlvil::triangulate(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
     triangulate_pts_body->clear();
-    // debug_file<<"上一关键帧提取点的个数"<<tracked_points.size()<<std::endl;
-    // debug_file<<"当前关键帧跟踪点个数"<<pts_last.size()<<std::endl;
     for(int i=0;i<tracked_points.size();i++){
         if(is_tran[i] == true) continue;
             auto dx = pts_last.at(i).x - tracked_points[i].x;
@@ -156,13 +154,13 @@ void violm::triangulate(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
         p_world_.y = p_world.y();
         p_world_.z = p_world.z();
         triangulate_pts_world->push_back(p_world_);
-        V3D pos(p_world.x(),p_world.y(),p_world.z());
-        PointPtr  p(new Point(pos));
-        p->id_ = map.map_points_.size();
-        map.addPoint(p);  
+        // V3D pos(p_world.x(),p_world.y(),p_world.z());
+        // PointPtr  p(new Point(pos));
+        // p->id_ = map.map_points_.size();
+        // map.addPoint(p);  
     }
 }
-bool violm::CalculateJTandResT(){
+bool lmlvil::CalculateJTandResT(){
     //debug_file<<"第"<<frame_nums<<"帧的第"<<iterate_num_T<<"次面特征迭代"<<std::endl;
     Rwi = state->rot_end;                //debug_file<<"state->rot_end: "<<state->rot_end<<std::endl;
     Pwi = state->pos_end;               //debug_file<<"state->pos_end: "<<state->pos_end.transpose()<<std::endl;

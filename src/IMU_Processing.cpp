@@ -116,18 +116,21 @@ void ImuProcess::IMU_init(const std::deque<sensor_msgs::Imu::ConstPtr> &imu_buff
   }
 
   state_ikfom init_state = kf_state.get_x();
-  if(normalized)
-    init_state.grav = - mean_acc / mean_acc.norm() * G_m_s2;
-  else
-    init_state.grav = -mean_acc;
-    init_state.grav = init_state.rot*init_state.grav;
-  ROS_INFO("IMU Initials: Gravity: %.4f %.4f %.4f; state.bias_g: %.4f %.4f %.4f; acc covarience: %.8f %.8f %.8f; gry covarience: %.8f %.8f %.8f",\
-               init_state.grav[0], init_state.grav[1], init_state.grav[2], mean_gyr[0], mean_gyr[1],mean_gyr[2], cov_acc[0], cov_acc[1], cov_acc[2], cov_gyr[0], cov_gyr[1], cov_gyr[2]);
-      cov_acc = cov_acc.cwiseProduct(cov_acc_scale);
-      cov_gyr = cov_gyr.cwiseProduct(cov_gyr_scale);
-  //state_inout.rot = Eye3d; // Exp(mean_acc.cross(V3D(0, 0, -1 / scale_gravity)));
+  if(!give_init){
+    if(normalized)
+        init_state.grav = - mean_acc / mean_acc.norm() * G_m_s2;
+      else
+        init_state.grav = -mean_acc;
+        init_state.grav = init_state.rot*init_state.grav;
+      ROS_INFO("IMU Initials: Gravity: %.4f %.4f %.4f; state.bias_g: %.4f %.4f %.4f; acc covarience: %.8f %.8f %.8f; gry covarience: %.8f %.8f %.8f",\
+                  init_state.grav[0], init_state.grav[1], init_state.grav[2], mean_gyr[0], mean_gyr[1],mean_gyr[2], cov_acc[0], cov_acc[1], cov_acc[2], cov_gyr[0], cov_gyr[1], cov_gyr[2]);
+          cov_acc = cov_acc.cwiseProduct(cov_acc_scale);
+          cov_gyr = cov_gyr.cwiseProduct(cov_gyr_scale);
+      //state_inout.rot = Eye3d; // Exp(mean_acc.cross(V3D(0, 0, -1 / scale_gravity)));
 
-  init_state.bg = mean_gyr;
+      init_state.bg = mean_gyr;
+  }
+  
   init_state.offset_T_L_I = Lidar_T_wrt_IMU;
   init_state.offset_R_L_I = Lidar_R_wrt_IMU;
   kf_state.change_x(init_state);
