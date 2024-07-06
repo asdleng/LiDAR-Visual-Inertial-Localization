@@ -1,5 +1,6 @@
 # LiDAR-Visual-IMU Fusion Localization
-![Image text](https://github.com/asdleng/LiDAR-Visual-Inertial-Localization/blob/master/img/systemoverview.jpg)
+<img src="https://github.com/asdleng/LiDAR-Visual-Inertial-Localization/blob/master/img/systemoverview.jpg" width="50%">
+
 
 This project presents a robust LiDAR-Visual-Inertial localization system running within a LiDAR-generated point cloud map, named LM-LVIL. The code is developed based on FAST-LIVO and FAST-LIO2, under the framework of IESKF. Photometric measurements, projection measurements, line measurements, and 3D point alignment measurements are considered to enhance the system's accuracy and robustness.
 
