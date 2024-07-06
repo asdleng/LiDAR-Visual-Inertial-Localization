@@ -20,7 +20,7 @@ img_scale : 1.0
 grid_size : 40
 patch_size : 8
 depth_search_radius: 60
-theta_thre: 0.8
+theta_thre: 0.5
 delta_dist_thre: 0.5
 skip_depth: 8.0
 img_enable : 1

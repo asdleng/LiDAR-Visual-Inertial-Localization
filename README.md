@@ -6,8 +6,6 @@ This project presents a robust LiDAR-Visual-Inertial locaization system running 
 - For visual measurements, map points are directly projected into camera frames for photometric constraints, rather than matching between the generated visual feature points and the point cloud map.
 - In addition to photometric constraints in visual measurements, projection constraints, line constraints, and 3D point alignment constraints are considered to enhance the system accuracy and robustness.
 
-![Image text](https://github.com/asdleng/LiDAR-Visual-Inertial-Localization/blob/master/img/illustrate.png)
-
 ## Prerequisites
 - ROS
 - Eigen
@@ -53,6 +51,11 @@ roslaunch lmlvil xxxx.launch
 ## Example
 - NTU-Viral dataset(https://ntu-aris.github.io/ntu_viral_dataset/)
 You should build the pointcloud map using LiDAR-based SLAM methods and save the PCD map into /map folder.
+
+<p align="center">
+  <img src="https://github.com/asdleng/LiDAR-Visual-Inertial-Localization/blob/master/img/img1.gif" width="45%">
+  <img src="https://github.com/asdleng/LiDAR-Visual-Inertial-Localization/blob/master/img/img2.gif" width="45%">
+</p>
 
 
 

@@ -1,8 +1,6 @@
-/map
+map/*
 !map/.gitkeep
-/Log
+Log/*
 !Log/lines/.gitkeep
 !Log/path/.gitkeep
-/CMRNet/**
 /.vscode
-/src/CMRNet/**
