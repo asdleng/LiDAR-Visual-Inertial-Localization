@@ -4,7 +4,7 @@
 
 bool lmlvil_node::downsample(MeasureGroup &ms){
     feats0 = ms.lidar;
-    downSizeFilterSurf.setInputCloud(feats0);  // 输出降采样点云(雷达坐标系)
+    downSizeFilterSurf.setInputCloud(feats0);  
     downSizeFilterSurf.filter(*feats_down_body); 
     feats_down_size = feats_down_body->points.size();
     feats_down_world->resize(feats_down_size);
@@ -20,7 +20,6 @@ void lmlvil_node::h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<do
     corr_normvect->clear();
     total_residual = 0.0;
 
-/** closest surface search and residual computation **/
 #ifdef MP_EN
     omp_set_num_threads(MP_PROC_NUM);
 #pragma omp parallel for
@@ -30,7 +29,6 @@ void lmlvil_node::h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<do
         PointType &point_body = feats_down_body->points[i];
         PointType &point_world = feats_down_world->points[i];
 
-        /* transform to world frame */
         V3D p_body(point_body.x, point_body.y, point_body.z);
         V3D p_global(s.rot * (extR * p_body + extT) + s.pos);
         point_world.x = p_global(0);
@@ -43,7 +41,7 @@ void lmlvil_node::h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<do
         auto &points_near = Nearest_Points[i];
         if (ekfom_data.converge)
         {
-            /** Find the closest surfaces in the map **/
+    
             lm_lvil->ikdtree.Nearest_Search(point_world, NUM_MATCH_POINTS, points_near, pointSearchSqDis);
             point_selected_surf[i] = points_near.size() < NUM_MATCH_POINTS ? false : pointSearchSqDis[NUM_MATCH_POINTS - 1] > 5 ? false
                                                                                                                                 : true;
@@ -96,8 +94,7 @@ void lmlvil_node::h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<do
     match_time += omp_get_wtime() - match_start;
     double solve_start_ = omp_get_wtime();
 
-    /*** Computation of Measuremnt Jacobian matrix H and measurents vector ***/
-    ekfom_data.h_x = MatrixXd::Zero(effct_feat_num, 12); //状态是23，实际只有12个状态优化了，即自身旋转平移和雷达外参
+    ekfom_data.h_x = MatrixXd::Zero(effct_feat_num, 12); 
     ekfom_data.h.resize(effct_feat_num);
 
     for (int i = 0; i < effct_feat_num; i++)
@@ -110,34 +107,30 @@ void lmlvil_node::h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<do
         M3D point_crossmat;
         point_crossmat << SKEW_SYM_MATRX(point_this);
 
-        /*** get the normal vector of closest surface/corner ***/
+
         const PointType &norm_p = corr_normvect->points[i];
         V3D norm_vec(norm_p.x, norm_p.y, norm_p.z);
 
-        /*** calculate the Measuremnt Jacobian matrix H ***/
+
         V3D C(s.rot.conjugate() * norm_vec);
         V3D A(point_crossmat * C);
         if (0)
         {
-            V3D B(point_be_crossmat * extR.conjugate() * C); //s.rot.conjugate()*norm_vec);
+            V3D B(point_be_crossmat * extR.conjugate() * C); 
             ekfom_data.h_x.block<1, 12>(i, 0) << norm_p.x, norm_p.y, norm_p.z, VEC_FROM_ARRAY(A), VEC_FROM_ARRAY(B), VEC_FROM_ARRAY(C);
         }
         else
         {
             ekfom_data.h_x.block<1, 12>(i, 0) << norm_p.x, norm_p.y, norm_p.z, VEC_FROM_ARRAY(A), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
-        }   // h_x: 残差的雅可比
+        }   
 
-        /*** Measuremnt: distance to the closest surface/corner ***/
-        ekfom_data.h(i) = -norm_p.intensity;    // h: 残差
+        ekfom_data.h(i) = -norm_p.intensity;    
     }
-    // cout<<"h:";
-    // cout<< fixed<<setprecision(3)<< ekfom_data.h.transpose()<<endl;
     solve_time += omp_get_wtime() - solve_start_;
     
     return;
 }
 
-/***将点从lidar坐标系边到地面坐标系***/
 void lmlvil_node::pointBodyToWorld(PointType const *const pi, PointType *const po)
 {
     V3D p_body(pi->x, pi->y, pi->z);

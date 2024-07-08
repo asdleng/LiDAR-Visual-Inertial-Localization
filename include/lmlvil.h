@@ -34,8 +34,6 @@
 #include <LineDetection3D.h>
 #include "utils.h"
 #include "line.h"
-//#include <photometric_factor.h>
-//#include "pose_local_parameterization.h"
 
 namespace lvo{
 
@@ -121,7 +119,7 @@ class lmlvil{
     int remove_frame_num=-1;
     float cloudCurvature[400000];
     int cloudSortInd[400000];
-    int cloudNeighborPicked[400000]; // not picked 0, picked 1(不能作为特征点)
+    int cloudNeighborPicked[400000]; 
     int cloudLabel[400000];  
 
     bool comp(int i, int j) { return (cloudCurvature[i] < cloudCurvature[j]); }
@@ -132,8 +130,8 @@ class lmlvil{
     double THRESHOLD_SHARP = 0.01;
     int kNumCurvSize = 5;
     int kNumRegion = 50;       // 6
-    int kNumEdge = 2;          // 2 最大edge points数目
-    int kNumFlat = 4;          // 4 最大 planar points数目
+    int kNumEdge = 2;          // 2 
+    int kNumFlat = 4;          // 4 
     int kNumEdgeNeighbor = 5;  // 5;
     int kNumFlatNeighbor = 5;  // 5;
     float kThresholdSharp = 50;          // 0.1;
@@ -150,13 +148,13 @@ class lmlvil{
     std::deque<PointPtr> observed_points;
     M3D R_convert;
     V3D P_convert;
-    M3D Rcl, Rci, Rli, Rcw, Ril, Rwc; // Rci: imu到camera,  Rcw：地面到camera
-    V3D Pcl, Pci, Pli, Pcw, Pil, Pwc; // Pci:imu到camera，Pcw：地面到camera
+    M3D Rcl, Rci, Rli, Rcw, Ril, Rwc; 
+    V3D Pcl, Pci, Pli, Pcw, Pil, Pwc; 
     Matrix<double, DIM_STATE, DIM_STATE> G, H_T_H,H_T_imgcovinv_H, lastG;
     Matrix<double, DIM_STATE, DIM_STATE> GL, HL_T_HL, lastGL;
     Matrix<double, DIM_STATE, DIM_STATE> GP, HP_T_HP, lastGP;
     Matrix<double, DIM_STATE, DIM_STATE> GT, HT_T_HT, lastGT;
-    double fx,fy,cx,cy; // 相机参数
+    double fx,fy,cx,cy; 
     double filter_size;
     int height, width;
     int grid_size, grid_n_width, grid_n_height,length;
@@ -231,7 +229,7 @@ class lmlvil{
     std::vector<double> index_response;
     std::vector<double> response;
     std::vector<double> exp_time;
-    Eigen::Vector3d euler;  // 当前帧位姿
+    Eigen::Vector3d euler;  
     enum Stage {
       STAGE_FIRST_FRAME,
       STAGE_DEFAULT_FRAME
@@ -305,7 +303,7 @@ class lmlvil{
       const Vector3d& f_ref,
       const double depth_ref,
       const Sophus::SE3& T_cur_ref,
-      const int level_ref,    // px_ref对应特征点的金字塔层级
+      const int level_ref,   
       const int pyramid_level,
       const int halfpatch_size,
       Matrix2d& A_cur_ref);

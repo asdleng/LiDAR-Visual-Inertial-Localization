@@ -85,7 +85,6 @@ void lmlvil_node::para(){
     nh.param<int>("preprocess/scan_rate", preprocess->SCAN_RATE, 10);
     nh.param<int>("preprocess/point_filter_num", preprocess->point_filter_num, 2);
     nh.param<bool>("preprocess/feature_extract_enable", preprocess->feature_enabled, false);
-    //std::cout<<"成功设置参数"<<std::endl;
 }
 void lmlvil_node::static_h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<state_ikfom::scalar> &ekfom_data) {
     if (instance) {
@@ -116,7 +115,6 @@ void lmlvil_node::publish_odometry(const ros::Publisher & pubOdomAftMapped,const
     br.sendTransform(tf::StampedTransform(transform, odomAftMapped.header.stamp, "camera_init", "aft_mapped"));
     tf::Transform transform_lidar;
     transform_lidar.setOrigin(tf::Vector3(extT[0], extT[1], extT[2]));
-    //M3D R_lidar_imu = Map<Matrix3d>(extrinR.data(),3,3);
     Quaterniond q_lidar_imu_(extR);
     tf::Quaternion q_lidar_imu;
     q_lidar_imu.setW(q_lidar_imu_.w());
@@ -173,7 +171,7 @@ void lmlvil_node::publish_frame_world_Triangulate(const ros::Publisher & pub)
 void lmlvil_node::publish_frame_world(const ros::Publisher & pubLaserCloudFullRes)
 {
     uint size = lm_lvil->pcl_down->points.size();
-    //std::cout<<size<<std::endl;
+
     if (1)//if(publish_count >= PUBFRAME_PERIOD)
     {
         sensor_msgs::PointCloud2 laserCloudmsg;
@@ -215,14 +213,14 @@ void lmlvil_node::publish_local_map(const ros::Publisher & pubLocalMap)
         laserCloudmsg.header.stamp = ros::Time::now();//.fromSec(last_timestamp_lidar);
         laserCloudmsg.header.frame_id = "camera_init";
         pubLocalMap.publish(laserCloudmsg);
-        // pcl_wait_pub->clear();
+
     }
-    // mtx_buffer_pointcloud.unlock();
+
 }
 void lmlvil_node::publish_frame_world_3DLine(const ros::Publisher & pub3DLine)
 {
     uint size = lm_lvil->pcl_down->points.size();
-    if (1)//if(publish_count >= PUBFRAME_PERIOD)
+    if (1)
     {
         visualization_msgs::Marker line_list;
         line_list.id = 2;
@@ -247,9 +245,9 @@ void lmlvil_node::publish_frame_world_3DLine(const ros::Publisher & pub3DLine)
         line_list.header.stamp = ros::Time::now();//.fromSec(last_timestamp_lidar);
         line_list.header.frame_id = "camera_init";
         pub3DLine.publish(line_list);
-        // pcl_wait_pub->clear();
+
     }
-    // mtx_buffer_pointcloud.unlock();
+
 }
 void lmlvil_node::publish_frame_world_line(const ros::Publisher & pubLaserCloudFullRes)
 {
@@ -263,7 +261,7 @@ void lmlvil_node::publish_frame_world_line(const ros::Publisher & pubLaserCloudF
         laserCloudmsg.header.stamp = ros::Time::now();//.fromSec(last_timestamp_lidar);
         laserCloudmsg.header.frame_id = "camera_init";
         pubLaserCloudFullRes.publish(laserCloudmsg);
-        // pcl_wait_pub->clear();
+
     }
     // mtx_buffer_pointcloud.unlock();
 }
@@ -283,11 +281,9 @@ void lmlvil_node::publish_true_path(const ros::Publisher pubTruePath){
 }
 
 void lmlvil_node::publish_depth_img(const image_transport::Publisher pubDepthImg){
-    //if(!new_image) return;
     cv::Mat img_depth = lm_lvil->img_depth;
     cv_bridge::CvImage out_msg;
     out_msg.header.stamp = ros::Time::now();
-    // out_msg.header.frame_id = "camera_init";
     out_msg.encoding = sensor_msgs::image_encodings::TYPE_8UC1;
     out_msg.image = img_depth;
     pubDepthImg.publish(out_msg.toImageMsg());

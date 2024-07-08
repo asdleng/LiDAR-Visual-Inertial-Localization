@@ -1,6 +1,6 @@
 #include "lmlvil.h"
 namespace lvo{
-/*光度约束相关内容*/
+
 void lmlvil::photometricConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>& kf){
     setStatePropagate(kf);
     *state = *state_propagat;
@@ -31,7 +31,6 @@ void lmlvil::photometricConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>&
                 continue;
             }
             const int eff_num = res_sub.size();
-            //debug_file<<"观测维度："<<eff_num<<std::endl;
             Eigen::MatrixXd H_sub = MatrixXd::Zero(eff_num, DIM_STATE);
             for(int l = 0; l < 6; l++){
                 H_sub.col(l) = J_sub.col(l);
@@ -53,7 +52,6 @@ void lmlvil::photometricConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>&
                 means += fabs(res_sub(j));
             }
             means = means / k;
-            //debug_file<<"误差为："<<means<<std::endl;
             if(means > last_error){
                 wrong_time++;
                 *state = old_state;
@@ -83,7 +81,6 @@ void lmlvil::photometricConstraint(esekfom::esekf<state_ikfom, 12, input_ikfom>&
     state->rot_end = rotation.toRotationMatrix();
     setKF(kf);
     updateFrameState();
-    debug_file << "===计算雅可比耗时" << t << std::endl;
 }
 
 
@@ -151,7 +148,6 @@ bool lmlvil::CalculateJandRes(int level,MatrixXd& J_sub,VectorXd& res_sub){
                         }
                     }
                     cv::Point gird_point(pc[0],pc[1]);
-                    //debug_file<<it_pv->pt->is_edge<<std::endl;
                     if(!it_pv->pt->is_edge){
                         cv::circle(img_cp,gird_point,4,cv::Scalar(0, 0, 255), -1, 8);
                     }

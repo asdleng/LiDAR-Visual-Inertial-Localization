@@ -84,7 +84,7 @@ public:
     lvo::Map map;
     lvo::FramePtr new_frame;
     deque<sensor_msgs::Imu::ConstPtr> imu_buffer;
-    deque<sensor_msgs::Imu::ConstPtr> imu_buffer_lidar; // 专为lidar去畸变的imubuffer
+    deque<sensor_msgs::Imu::ConstPtr> imu_buffer_lidar; 
     deque<std::pair<cv::Mat,double>> img_buffer; 
     deque<std::pair<PointCloudXYZI::Ptr,double>> lidar_buffer; 
     mutex mtx_buffer_imu;
@@ -150,7 +150,7 @@ public:
     ros::Publisher pub3DLine;
 
     static bool time_list(PointType &x, PointType &y) {return (x.curvature < y.curvature);};
-    void wirteEuRoc(double current_time, nav_msgs::Odometry odom);
+    void wirteTUM(double current_time, nav_msgs::Odometry odom);
     cv::Mat getImageFromMsg(const sensor_msgs::ImageConstPtr& img_msg);
     void publish_img(const image_transport::Publisher pubImg);
     void img_cbk(const sensor_msgs::Image::ConstPtr &msg);
@@ -179,7 +179,7 @@ public:
 
     lmlvil_node(ros::NodeHandle* nodehandle):
         nh(*nodehandle),
-        extrinT(3, 0.0),             // 使用构造函数初始化列表初始化
+        extrinT(3, 0.0),            
         extrinR(9, 0.0),
         cameraextrinT(3, 0.0),
         cameraextrinR(9, 0.0),
